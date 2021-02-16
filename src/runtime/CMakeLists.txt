@@ -10,6 +10,10 @@ if (GMT_ROOT)
   set(runtime_prefixes ${runtime_prefixes} gmt)
   set(gmt_sources gmt_mapping/gmt_main.cc)
 endif()
+if (HPX_ROOT)
+  set(runtime_prefixes ${runtime_prefixes} hpx)
+  set(hpx_sources hpx_mapping/hpx_main.cc)
+endif()
 
 if (HAVE_CPP_SIMPLE)
   set(sources
@@ -20,6 +24,9 @@ elseif (HAVE_TBB)
 elseif (HAVE_GMT)
   set(sources
     gmt_mapping/gmt_main.cc)
+elseif (HAVE_HPX)
+  set(sources
+    hpx_mapping/hpx_main.cc)
 endif()
 
 
@@ -75,5 +82,9 @@ elseif (HAVE_GMT)
   target_include_directories(runtime PUBLIC ${GMT_INCLUDE_DIRS})
   target_compile_definitions(runtime PUBLIC HAVE_GMT=1)
   target_link_libraries(runtime PUBLIC ${GMT_LIBRARIES})
+elseif (HAVE_HPX)
+  target_include_directories(runtime PUBLIC ${HPX_INCLUDE_DIRS})
+  target_compile_definitions(runtime PUBLIC HAVE_HPX=1)
+  target_link_libraries(runtime PUBLIC ${HPX_LIBRARIES})
 endif()
 install(TARGETS runtime ARCHIVE DESTINATION lib)
