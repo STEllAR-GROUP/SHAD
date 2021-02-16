@@ -1,0 +1,10 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+includedir=${prefix}/include
+libdir=${exec_prefix}/lib
+
+Name: @CMAKE_PROJECT_NAME@_HPX
+Description: SHAD - Scalable and High-Performance Algorithms and Data-Structures, HPX Backend.
+Version: @PACKAGE_VERSION@
+Cflags: @CMAKE_CXX_FLAGS@ -DHAVE_HPX=1 -I${includedir}
+Libs: -L${libdir} -Wl,-rpath,${libdir} -lhpx_runtime -lutils @LINK_FLAGS@
