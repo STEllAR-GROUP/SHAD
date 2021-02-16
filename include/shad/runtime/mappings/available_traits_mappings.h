@@ -31,6 +31,8 @@
 #include "shad/runtime/mappings/tbb/tbb_traits_mapping.h"
 #elif defined HAVE_GMT
 #include "shad/runtime/mappings/gmt/gmt_traits_mapping.h"
+#elif defined HAVE_HPX
+#include "shad/runtime/mappings/hpx/hpx_traits_mapping.h"
 #endif
 
 #endif  // INCLUDE_SHAD_RUNTIME_MAPPINGS_AVAILABLE_TRAITS_MAPPINGS_H_
