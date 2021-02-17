@@ -157,7 +157,7 @@ struct SynchronousInterface<hpx_tag> {
   static void dma(const Locality &, const T* remoteAddress,
                   const T* localData, const size_t numElements) {
     memcpy(getNodeId((u_int8_t*)remoteAddress,
-                     (u_int8_t*)(localData), numElements*sizeof(T));
+                     (u_int8_t*)(localData), numElements*sizeof(T)));
   }
 
   template <typename T>
