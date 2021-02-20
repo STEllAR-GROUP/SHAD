@@ -25,8 +25,11 @@
 #ifndef INCLUDE_SHAD_RUNTIME_MAPPINGS_HPX_HPX_UTILITY_H_
 #define INCLUDE_SHAD_RUNTIME_MAPPINGS_HPX_HPX_UTILITY_H_
 
+#include <cstddef>
+#include <cstdint>
 #include <sstream>
 #include <system_error>
+
 #include "shad/runtime/locality.h"
 
 namespace shad {
