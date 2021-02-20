@@ -159,6 +159,35 @@ installed using the following commands:
 
 where ``$GMT_ROOT`` is the directory where you want the library to be installed.
 
+HPX
+"""
+
+SHAD uses [HPX](https://github.com/STEllAR-GROUP/hpx) system as backend for commodity 
+clusters. Software prerequisites for HPX on Linux systems are: compiler, CMake, Boost
+C++ Libraries, and Portable Hardware Locality(HWLOC). You can find more details in
+[HPX Build Recipes](https://stellar-group.github.io/hpx/docs/sphinx/latest/html/manual/building_hpx.html#building-hpx).
+
+It can be installed using the following
+commands:
+
+.. code-block:: shell
+
+    $ git clone https://github.com/STEllAR-GROUP/hpx.git
+    $ cd hpx
+    $ mkdir build && cd build
+    $ cmake .. -DCMAKE_INSTALL_PREFIX=$HPXOOT   \
+        -DHPX_WITH_CXX17=ON                     \
+        -DCMAKE_CXX_STANDARD=17                 \
+        -DHPX_USE_CMAKE_CXX_STANDARD=ON         \
+        -DHPX_WITH_PARCELPORT_MPI=ON            \
+        -DHPX_WITH_PARCELPORT_TCP=OFF           \
+        -DHPX_WITH_HWLOC=ON                     \
+        -DHPX_WITH_MALLOC=tcmalloc              \
+        -DCMAKE_BUILD_TYPE=Release
+    $ make -j <SOMETHING_REASONABLE> && make install
+
+where ``$HPXROOT`` is the directory where you want the library to be installed.
+
 Build SHAD
 ----------
 
@@ -182,6 +211,8 @@ provide additional backends. Target runtime systems may be specified via the
         -DTBB_ROOT=$TBBROOT                            \
         # else if using GMT                            \
         -DGMT_ROOT=$GMTROOT                            \
+         # else if using HPX                           \
+        -DGMT_ROOT=$HPXT                               \
         # endif                                        \
         -DGTEST_ROOT=$GTESTROOT                        \
         -DGPERFTOOLS_ROOT=$GPERFTOOLSROOT
