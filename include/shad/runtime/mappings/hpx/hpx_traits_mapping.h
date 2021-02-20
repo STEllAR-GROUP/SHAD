@@ -31,6 +31,7 @@
 #include <mutex>
 #include <string>
 
+#include "hpx/hpx.hpp"
 #include "shad/runtime/mapping_traits.h"
 
 namespace shad {
