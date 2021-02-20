@@ -11,7 +11,7 @@ if (GMT_ROOT)
   set(gmt_sources gmt_mapping/gmt_main.cc)
 endif()
 if (HPX_ROOT)
-  set(runtime_prefixes_hpx ${runtime_prefixes_hpx} hpx)
+  set(runtime_prefixes ${runtime_prefixes} hpx)
   set(hpx_sources hpx_mapping/hpx_main.cc)
 endif()
 
@@ -57,7 +57,13 @@ foreach(rp ${runtime_prefixes})
                              ${${uprp}_INCLUDE_DIRS}
                              $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
                              $<INSTALL_INTERFACE:include>)
-  target_link_libraries(${rp}_runtime PUBLIC ${${uprp}_LIBRARIES})
+  if (HAVE_HPX)
+    target_link_libraries(${rp}_runtime PUBLIC HPX::hpx)
+  else()
+    target_link_libraries(${rp}_runtime PUBLIC ${${uprp}_LIBRARIES})
+  endif()
+
+  #target_link_libraries(${rp}_runtime PUBLIC ${${uprp}_LIBRARIES})
   target_compile_definitions(${rp}_runtime PUBLIC HAVE_${uprp}=1)
   install(TARGETS ${rp}_runtime
           EXPORT ${rp}_runtime_export
@@ -66,37 +72,6 @@ foreach(rp ${runtime_prefixes})
           FILE shad_${rp}_runtime_export.cmake
           DESTINATION cmake)
 endforeach(rp)
-
-if(runtime_prefixes_hpx)
-  add_library(${runtime_prefixes_hpx}_runtime STATIC ${${runtime_prefixes_hpx}_sources})
-  if (CLANG_TIDY_EXE)
-    set_target_properties(${runtime_prefixes_hpx}_runtime PROPERTIES CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
-  endif()
-  if (GPERFTOOLS_FOUND)
-    target_include_directories(${runtime_prefixes_hpx}_runtime PUBLIC ${GPERFTOOLS_INCLUDE_DIRS})
-    target_link_libraries(${runtime_prefixes_hpx}_runtime PUBLIC ${GPERFTOOLS_LIBRARIES})
-  endif()
-  string(TOUPPER "${runtime_prefixes_hpx}" uprp)
-  configure_file(
-    ${SHAD_MAIN_SRC_DIR}/pkgconfig/shad_${runtime_prefixes_hpx}.pc.in
-    ${SHAD_BINARY_DIR}/pkgconfig/shad_${runtime_prefixes_hpx}.pc @ONLY)
-  install(FILES ${SHAD_BINARY_DIR}/pkgconfig/shad_${runtime_prefixes_hpx}.pc
-          DESTINATION pkgconfig)
-  
-  target_include_directories(${runtime_prefixes_hpx}_runtime
-                             PUBLIC 
-                             ${${uprp}_INCLUDE_DIRS}
-                             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-                             $<INSTALL_INTERFACE:include>)
-  target_link_libraries(${runtime_prefixes_hpx}_runtime PUBLIC HPX::hpx)
-  target_compile_definitions(${runtime_prefixes_hpx}_runtime PUBLIC HAVE_${uprp}=1)
-  install(TARGETS ${runtime_prefixes_hpx}_runtime
-          EXPORT ${runtime_prefixes_hpx}_runtime_export
-          ARCHIVE DESTINATION lib)
-  install(EXPORT ${runtime_prefixes_hpx}_runtime_export
-          FILE shad_${runtime_prefixes_hpx}_runtime_export.cmake
-          DESTINATION cmake)
-endif()
 
 
 if (GPERFTOOLS_FOUND)
