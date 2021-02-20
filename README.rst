@@ -137,6 +137,7 @@ threading library to be installed. SHAD currently supports:
 
 - `Global Memory and Threading Runtime System (GMT), <https://github.com/pnnl/gmt>`_
 - `Intel Threading Building Blocks (TBB), <https://www.threadingbuildingblocks.org/>`_
+- `HPX <https://github.com/STEllAR-GROUP/hpx>`_
 
 If such software is not available on the system, SHAD can be compiled and used
 with its default (single-threaded) C++ backend.
@@ -162,13 +163,11 @@ where ``$GMT_ROOT`` is the directory where you want the library to be installed.
 HPX
 """
 
-SHAD uses `HPX <https://github.com/STEllAR-GROUP/hpx>`_ system as backend for commodity 
-clusters. Software prerequisites for HPX on Linux systems are: compiler, CMake, Boost
-C++ Libraries, and Portable Hardware Locality(HWLOC). You can find more details in
-`HPX Build Recipes<https://stellar-group.github.io/hpx/docs/sphinx/latest/html/manual/building_hpx.html#building-hpx>`_.
+SHAD uses HPX as backend for commodity clusters. Software prerequisites for HPX 
+on Linux systems are: compiler, CMake, Boost C++ Libraries, and Portable Hardware
+Locality(HWLOC). You can find more details in `HPX Build Recipes <https://stellar-group.github.io/hpx/docs/sphinx/latest/html/manual/building_hpx.html#building-hpx>`_. 
 
-It can be installed using the following
-commands:
+It can be installed using the following commands:
 
 .. code-block:: shell
 
