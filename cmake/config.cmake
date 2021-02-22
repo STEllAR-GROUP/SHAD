@@ -76,9 +76,6 @@ if (GMT_ROOT)
   find_package(GMT REQUIRED)
   # FindGMT will set libs and include dirs
 endif()
-if (HPX_ROOT)
-  find_package(HPX REQUIRED)
-endif()
 
 if (SHAD_RUNTIME_SYSTEM STREQUAL "CPP_SIMPLE")
   message(STATUS "Using the default C++ implementation of the Abstract Runtime API.")
