@@ -22,10 +22,13 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include <hpx/hpx_main.hpp>
 namespace shad {
 
 extern int main(int argc, char *argv[]);
 
 }  // namespace shad
 
-int main(int argc, char *argv[]) { return shad::main(argc, argv); }
+extern "C" int main(int argc, char *argv[]) { 
+    return shad::main(argc, argv);
+}
