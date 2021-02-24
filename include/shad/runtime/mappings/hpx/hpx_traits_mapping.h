@@ -46,46 +46,33 @@ struct HpxHandle {};
 
 template <>
 struct HandleTrait<hpx_tag> {
-  using HandleTy = hpx::shared_future<void>;
-  using ParameterTy = hpx::shared_future<void> &;
-  using ConstParameterTy = const hpx::shared_future<void> &;
+  using HandleTy = std::shared_ptr<HpxHandle>;
+  using ParameterTy = std::shared_ptr<HpxHandle> &;
+  using ConstParameterTy = const std::shared_ptr<HpxHandle> &;
 
-  static void Init(ParameterTy H, ConstParameterTy V) {
-    H = V.then([](HandleTy&&){});
-  }
+  static void Init(ParameterTy H, ConstParameterTy V) {}
 
-  static HandleTy NullValue() { return hpx::shared_future<void>(); }
+  static HandleTy NullValue() { return nullptr; }
 
   static bool Equal(ConstParameterTy lhs, ConstParameterTy rhs) {
-    return toUnsignedInt(lhs) == toUnsignedInt(rhs);
+    return lhs == rhs;
   }
 
-  static std::string toString(ConstParameterTy H) {
-    return std::to_string(toUnsignedInt(H));
-    }
+  static std::string toString(ConstParameterTy H) { return ""; }
 
   static uint64_t toUnsignedInt(ConstParameterTy H) {
-    return reinterpret_cast<uint64_t>(hpx::traits::detail::get_shared_state(H)
-                                      .get());
+    return reinterpret_cast<uint64_t>(H.get());
   }
 
-  static HandleTy CreateNewHandle() {
-    return hpx::shared_future<void>();
-  }
+  static HandleTy CreateNewHandle() { return std::make_shared<HpxHandle>(); }
 
-  // alternative implementation:
-  //static HandleTy CreateNewHandle() {
-  //  return hpx::make_ready_future();
-  //}
-
-  static void WaitFor(ParameterTy H) { if (H.valid()) H.get(); }
-
+  static void WaitFor(ParameterTy H) {}
 };
 
 
 template <>
 struct LockTrait<hpx_tag> {
-  using LockTy = hpx::lcos::local::spinlock;
+  using LockTy = std::mutex;
 
   static void lock(LockTy &L) { L.lock(); }
   static void unlock(LockTy &L) { L.unlock(); }
@@ -97,13 +84,12 @@ struct RuntimeInternalsTrait<hpx_tag> {
 
   static void Finalize() {}
 
-  static size_t Concurrency() { return hpx::get_num_worker_threads(); }
-  static void Yield() { hpx::this_thread::yield(); }
+  static size_t Concurrency() { return 1; }
+  static void Yield() {}
 
-  static uint32_t ThisLocality() { return hpx::get_locality_id(); }
-  static uint32_t NullLocality() { return hpx::naming::invalid_locality_id; }
-  static uint32_t NumLocalities() { 
-    return hpx::get_num_localities(hpx::launch::sync); }
+  static uint32_t ThisLocality() { return 0; }
+  static uint32_t NullLocality() { return -1; }
+  static uint32_t NumLocalities() { return 1; }
 };
 
 }  // namespace impl
