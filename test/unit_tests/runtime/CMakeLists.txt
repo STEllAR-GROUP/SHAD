@@ -1,4 +1,4 @@
-set(tests execute_at_test execute_on_all_test for_each_test rdma_test hpx_cout_test hpx_future_test)
+set(tests execute_at_test execute_on_all_test for_each_test rdma_test hpx_cout_test)
 
 foreach(t ${tests})
   add_executable(${t} ${t}.cc)
