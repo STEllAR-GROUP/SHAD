@@ -22,10 +22,19 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include <hpx/hpx_init.hpp>
 namespace shad {
 
 extern int main(int argc, char *argv[]);
 
 }  // namespace shad
 
-int main(int argc, char *argv[]) { return shad::main(argc, argv); }
+int hpx_main(int argc, char *argv[]) { 
+    int result = shad::main(argc, argv);
+    hpx::finalize();
+    return result;
+}
+
+int main(int argc, char *argv[]) { 
+  return hpx::init(argc, argv);
+}
