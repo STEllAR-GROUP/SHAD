@@ -45,6 +45,7 @@ struct hpx_tag {};
 struct HpxHandle {};
 
 template <>
+
 struct HandleTrait<hpx_tag> {
   using HandleTy = std::shared_ptr<HpxHandle>;
   using ParameterTy = std::shared_ptr<HpxHandle> &;
@@ -55,6 +56,7 @@ struct HandleTrait<hpx_tag> {
   static HandleTy NullValue() { return nullptr; }
 
   static bool Equal(ConstParameterTy lhs, ConstParameterTy rhs) {
+    std::cout << "this is Equal func \n";
     return lhs == rhs;
   }
 
@@ -70,6 +72,35 @@ struct HandleTrait<hpx_tag> {
 };
 
 
+/***
+struct HandleTrait<hpx_tag> {
+  using HandleTy = hpx::shared_future<void>;
+  using ParameterTy = hpx::shared_future<void> &;
+  using ConstParameterTy = const hpx::shared_future<void> &;
+
+  static void Init(ParameterTy H, ConstParameterTy V) {
+    H = V.then([](HandleTy&&){});
+  }
+
+  static HandleTy NullValue() { return hpx::shared_future<void>(); }
+
+  static bool Equal(ConstParameterTy lhs, ConstParameterTy rhs) {
+    return toUnsignedInt(lhs) == toUnsignedInt(rhs);
+  }
+
+  static std::string toString(ConstParameterTy H) {
+    return std::to_string(toUnsignedInt(H));
+  }
+
+  static uint64_t toUnsignedInt(ConstParameterTy H) {
+    return reinterpret_cast<uint64_t>(hpx::traits::detail::get_shared_state(H).get());
+  }
+
+  static HandleTy CreateNewHandle() { return hpx::shared_future<void>(); }
+
+  static void WaitFor(ParameterTy H) { if (H.valid()) H.get(); }
+};
+***/
 template <>
 struct LockTrait<hpx_tag> {
   using LockTy = hpx::lcos::local::spinlock;
