@@ -72,7 +72,7 @@ struct HandleTrait<hpx_tag> {
 
 template <>
 struct LockTrait<hpx_tag> {
-  using LockTy = std::mutex;
+  using LockTy = hpx::lcos::local::spinlock;
 
   static void lock(LockTy &L) { L.lock(); }
   static void unlock(LockTy &L) { L.unlock(); }
@@ -84,12 +84,14 @@ struct RuntimeInternalsTrait<hpx_tag> {
 
   static void Finalize() {}
 
-  static size_t Concurrency() { return 1; }
-  static void Yield() {}
+  static size_t Concurrency() { return hpx::get_num_worker_threads(); }
+  static void Yield() { hpx::this_thread::yield(); }
 
-  static uint32_t ThisLocality() { return 0; }
-  static uint32_t NullLocality() { return -1; }
-  static uint32_t NumLocalities() { return 1; }
+  static uint32_t ThisLocality() { return hpx::get_locality_id(); }
+  static uint32_t NullLocality() { return hpx::naming::invalid_locality_id; }
+  static uint32_t NumLocalities(){
+    return hpx::get_num_localities(hpx::launch::sync);
+  }
 };
 
 }  // namespace impl
