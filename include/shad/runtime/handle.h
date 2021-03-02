@@ -76,7 +76,6 @@ class Handle {
 
   /// @brief Operator equal.
   friend bool operator==(const Handle &lhs, const Handle &rhs) {
-    std::cout << "== operator is calling Equal func \n";
     return impl::HandleTrait<TargetSystemTag>::Equal(lhs.id_, rhs.id_);
   }
 
@@ -88,9 +87,8 @@ class Handle {
   /// @brief Null Test.
   /// @return true if the Handle is null, false otherwise.
   bool IsNull() const {
-    std::cout << " calling IsNull() func \n";
-    //return operator==( *this, impl::HandleTrait<TargetSystemTag>::NullValue());
-    return id_ == impl::HandleTrait<TargetSystemTag>::NullValue();
+    return impl::HandleTrait<TargetSystemTag>::Equal(
+        id_, impl::HandleTrait<TargetSystemTag>::NullValue());
   }
 
  private:
