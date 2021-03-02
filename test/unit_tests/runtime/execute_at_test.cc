@@ -252,8 +252,6 @@ TEST_F(ExecuteAtTest, AsyncExecuteAtWithRetBuffExplicit) {
   std::vector<uint32_t> retSizes(shad::rt::numLocalities() * kNumIters, 0);
 
   shad::rt::Handle handle;
-  bool bool_value = handle.IsNull();
-  std::cout << "test handle.IsNull(), the bool value is: " << bool_value;
 
   for (auto &locality : shad::rt::allLocalities()) {
     uint32_t localityNumber = static_cast<uint32_t>(locality);
