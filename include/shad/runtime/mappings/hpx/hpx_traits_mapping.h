@@ -86,7 +86,7 @@ struct RuntimeInternalsTrait<hpx_tag> {
 
   static void Finalize() {}
 
-  static size_t Concurrency() { return hpx::get_num_worker_threads(); }
+  static size_t Concurrency() { return hpx::get_worker_thread_num(); }
   static void Yield() { hpx::this_thread::yield(); }
 
   static uint32_t ThisLocality() { return hpx::get_locality_id(); }

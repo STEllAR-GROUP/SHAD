@@ -30,6 +30,7 @@
 #include <sstream>
 #include <system_error>
 
+#include "hpx/hpx.hpp"
 #include "shad/runtime/locality.h"
 
 namespace shad {
@@ -37,6 +38,20 @@ namespace rt {
 
 namespace impl {
 
+inline uint32_t getLocalityId(const Locality &loc) {
+  return static_cast<uint32_t>(loc);
+}
+
+inline void checkLocality(const Locality& loc) {
+  uint32_t localityID = getLocalityId(loc);
+  if (localityID >= hpx::get_num_localities(hpx::launch::sync)) {
+    std::stringstream ss;
+    ss << "The system does not include " << loc;
+    throw std::system_error(0xdeadc0de, std::generic_category(), ss.str());
+  }
+}
+
+/***
 inline void checkLocality(const Locality& loc) {
   Locality L(0);
   if (loc != L) {
@@ -45,6 +60,7 @@ inline void checkLocality(const Locality& loc) {
     throw std::system_error(0xdeadc0de, std::generic_category(), ss.str());
   }
 }
+***/
 
 }  // namespace impl
 
