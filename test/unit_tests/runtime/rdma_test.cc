@@ -95,7 +95,7 @@ TEST_F(RDMATest, synch_dmas) {
     ASSERT_EQ(acc3, 42*_n_elements);
   }
 }
-
+/***
 TEST_F(RDMATest, async_put_sync_get) {
   myelement_t val{8, 24, 42};
   std::vector<myelement_t>localData(_n_elements, val);
@@ -186,7 +186,7 @@ TEST_F(RDMATest, async_put_async_get) {
     ASSERT_EQ(acc3, 42*_n_elements);
   }
 }
-
+***/
   
 
 #if 0

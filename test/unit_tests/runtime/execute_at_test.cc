@@ -165,7 +165,7 @@ TEST_F(ExecuteAtTest, SyncExecuteAtExplicit) {
     shad::rt::executeAt(loc, check, EmptyArray, 0);
   }
 }
-
+/***
 TEST_F(ExecuteAtTest, AsyncExecuteAtExplicit) {
   shad::rt::Handle handle;
 
@@ -207,7 +207,7 @@ TEST_F(ExecuteAtTest, AsyncExecuteAt) {
     shad::rt::executeAt(loc, check, nullptr, 0);
   }
 }
-
+***/
 TEST_F(ExecuteAtTest, SyncExecuteAt) {
   for (auto loc : shad::rt::allLocalities()) {
     size_t value = kValue + static_cast<uint32_t>(loc);
@@ -246,7 +246,7 @@ TEST_F(ExecuteAtTest, SyncExecuteAtWithRetBuffExplicit) {
     shad::rt::executeAt(loc, check, nullptr, 0);
   }
 }
-
+/***
 TEST_F(ExecuteAtTest, AsyncExecuteAtWithRetBuffExplicit) {
   std::vector<exData> retData(shad::rt::numLocalities() * kNumIters);
   std::vector<uint32_t> retSizes(shad::rt::numLocalities() * kNumIters, 0);
@@ -287,7 +287,7 @@ TEST_F(ExecuteAtTest, AsyncExecuteAtWithRetBuffExplicit) {
     shad::rt::executeAt(loc, check, nullptr, 0);
   }
 }
-
+***/
 TEST_F(ExecuteAtTest, SyncExecuteAtWithRetBuff) {
   for (auto loc : shad::rt::allLocalities()) {
     size_t value = kValue + static_cast<uint32_t>(loc);
@@ -347,7 +347,7 @@ TEST_F(ExecuteAtTest, SyncExecuteAtWithRet) {
     shad::rt::executeAt(loc, check, nullptr, 0);
   }
 }
-
+/***
 TEST_F(ExecuteAtTest, AsyncExecuteAtWithRet) {
   shad::rt::Handle handle;
 
@@ -521,7 +521,7 @@ TEST_F(ExecuteAtTest, AsyncExecuteAtWithRetDifferentSizes) {
 
   shad::rt::waitForCompletion(handle);
 }
-
+***/
 TEST_F(ExecuteAtTest, NotExistingLocality) {
   shad::rt::Locality badLocality(shad::rt::numLocalities());
 

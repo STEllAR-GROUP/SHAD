@@ -99,7 +99,7 @@ TEST_F(ExecuteOnAllTest, ExecuteOnAllWithBuffer) {
                         false);
   }
 }
-
+/***
 TEST_F(ExecuteOnAllTest, AsyncExecuteOnAllWithStruct) {
   for (auto &loc : shad::rt::allLocalities()) {
     shad::rt::executeAt(loc, [](const bool &) { ASSERT_EQ(Counter, 0); },
@@ -179,3 +179,4 @@ TEST_F(ExecuteOnAllTest, AsyncExecuteOnAllWithBuffer) {
                         false);
   }
 }
+***/

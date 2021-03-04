@@ -220,7 +220,7 @@ TEST_F(ForEachTest, ForEachAtWithBuffer) {
       },
       false);
 }
-
+/***
 TEST_F(ForEachTest, AsyncForEachOnAllWithStruct) {
   shad::rt::executeOnAll([](const bool &) { ASSERT_EQ(Counter, 0); }, false);
 
@@ -456,7 +456,7 @@ TEST_F(ForEachTest, AsyncForEachAtWithBuffer) {
       },
       false);
 }
-
+***/
 TEST_F(ForEachTest, SyncZeroIterations) {
   std::shared_ptr<uint8_t> data(new uint8_t[2]{5, 5},
                                 std::default_delete<uint8_t[]>());
@@ -516,7 +516,7 @@ TEST_F(ForEachTest, SyncZeroIterations) {
 
   shad::rt::executeOnAll([](const bool &) { ASSERT_EQ(Counter, 0); }, false);
 }
-
+/***
 TEST_F(ForEachTest, AsyncZeroIterations) {
   std::shared_ptr<uint8_t> buffer(new uint8_t[2]{5, 5},
                                   std::default_delete<uint8_t[]>());
@@ -584,7 +584,7 @@ TEST_F(ForEachTest, AsyncZeroIterations) {
 
   shad::rt::executeOnAll([](const bool &) { ASSERT_EQ(Counter, 0); }, false);
 }
-
+***/
 TEST_F(ForEachTest, NotExistingLocality) {
   shad::rt::Locality badLocality(shad::rt::numLocalities() + 1);
 

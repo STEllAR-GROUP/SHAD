@@ -28,6 +28,7 @@
 #include <memory>
 #include <utility>
 
+#include "hpx/hpx.hpp"
 #include "shad/runtime/locality.h"
 #include "shad/runtime/mappings/hpx/hpx_traits_mapping.h"
 #include "shad/runtime/mappings/hpx/hpx_utility.h"
@@ -44,6 +45,7 @@ struct SynchronousInterface<hpx_tag> {
   static void executeAt(const Locality &loc, FunT &&function,
                         const InArgsT &args) {
     using FunctionTy = void (*)(const InArgsT &);
+
     checkLocality(loc);
     FunctionTy fn = std::forward<decltype(function)>(function);
     fn(args);
@@ -54,6 +56,7 @@ struct SynchronousInterface<hpx_tag> {
                         const std::shared_ptr<uint8_t> &argsBuffer,
                         const uint32_t bufferSize) {
     using FunctionTy = void (*)(const uint8_t *, const uint32_t);
+
     FunctionTy fn = std::forward<decltype(function)>(function);
     checkLocality(loc);
     fn(argsBuffer.get(), bufferSize);
@@ -64,6 +67,7 @@ struct SynchronousInterface<hpx_tag> {
                                    const InArgsT &args, uint8_t *resultBuffer,
                                    uint32_t *resultSize) {
     using FunctionTy = void (*)(const InArgsT &, uint8_t *, uint32_t *);
+
     FunctionTy fn = std::forward<decltype(function)>(function);
     checkLocality(loc);
     fn(args, resultBuffer, resultSize);
@@ -77,6 +81,7 @@ struct SynchronousInterface<hpx_tag> {
                                    uint32_t *resultSize) {
     using FunctionTy =
         void (*)(const uint8_t *, const uint32_t, uint8_t *, uint32_t *);
+
     FunctionTy fn = std::forward<decltype(function)>(function);
     checkLocality(loc);
     fn(argsBuffer.get(), bufferSize, resultBuffer, resultSize);
@@ -86,6 +91,7 @@ struct SynchronousInterface<hpx_tag> {
   static void executeAtWithRet(const Locality &loc, FunT &&function,
                                const InArgsT &args, ResT *result) {
     using FunctionTy = void (*)(const InArgsT &, ResT *);
+
     FunctionTy fn = std::forward<decltype(function)>(function);
     checkLocality(loc);
     fn(args, result);
@@ -96,6 +102,7 @@ struct SynchronousInterface<hpx_tag> {
                                const std::shared_ptr<uint8_t> &argsBuffer,
                                const uint32_t bufferSize, ResT *result) {
     using FunctionTy = void (*)(const uint8_t *, const uint32_t, ResT *);
+
     FunctionTy fn = std::forward<decltype(function)>(function);
     checkLocality(loc);
     fn(argsBuffer.get(), bufferSize, result);
@@ -104,6 +111,7 @@ struct SynchronousInterface<hpx_tag> {
   template <typename FunT, typename InArgsT>
   static void executeOnAll(FunT &&function, const InArgsT &args) {
     using FunctionTy = void (*)(const InArgsT &);
+
     FunctionTy fn = std::forward<decltype(function)>(function);
     fn(args);
   }
@@ -113,6 +121,7 @@ struct SynchronousInterface<hpx_tag> {
                            const std::shared_ptr<uint8_t> &argsBuffer,
                            const uint32_t bufferSize) {
     using FunctionTy = void (*)(const uint8_t *, const uint32_t);
+
     FunctionTy fn = std::forward<decltype(function)>(function);
     fn(argsBuffer.get(), bufferSize);
   }
@@ -121,7 +130,9 @@ struct SynchronousInterface<hpx_tag> {
   static void forEachAt(const Locality &loc, FunT &&function,
                         const InArgsT &args, const size_t numIters) {
     using FunctionTy = void (*)(const InArgsT &, size_t);
+
     FunctionTy fn = std::forward<decltype(function)>(function);
+
     checkLocality(loc);
     for (auto i = 0; i < numIters; ++i) fn(args, i);
   }
