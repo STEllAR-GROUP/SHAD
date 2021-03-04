@@ -134,7 +134,10 @@ struct SynchronousInterface<hpx_tag> {
     FunctionTy fn = std::forward<decltype(function)>(function);
 
     checkLocality(loc);
-    for (auto i = 0; i < numIters; ++i) fn(args, i);
+
+    std::vector<std::size_t> range(numIters);
+    hpx::for_each(range.begin(), range.end(),
+                  [&](const size_t &i) {fn(args, i);});
   }
 
   template <typename FunT>
@@ -142,17 +145,26 @@ struct SynchronousInterface<hpx_tag> {
                         const std::shared_ptr<uint8_t> &argsBuffer,
                         const uint32_t bufferSize, const size_t numIters) {
     using FunctionTy = void (*)(const uint8_t *, const uint32_t, size_t);
+
     FunctionTy fn = std::forward<decltype(function)>(function);
+
     checkLocality(loc);
-    for (auto i = 0; i < numIters; ++i) fn(argsBuffer.get(), bufferSize, i);
+
+    std::vector<std::size_t> range(numIters);
+    hpx::for_each(range.begin(), range.end(),
+                  [&](const size_t &i) {fn(argsBuffer.get(), bufferSize, i);});
   }
 
   template <typename FunT, typename InArgsT>
   static void forEachOnAll(FunT &&function, const InArgsT &args,
                            const size_t numIters) {
     using FunctionTy = void (*)(const InArgsT &, size_t);
+
     FunctionTy fn = std::forward<decltype(function)>(function);
-    for (auto i = 0; i < numIters; ++i) fn(args, i);
+
+    std::vector<std::size_t> range(numIters);
+    hpx::for_each(range.begin(), range.end(),
+                  [&](const size_t &i) {fn(args, i);});
   }
 
   template <typename FunT>
@@ -160,8 +172,12 @@ struct SynchronousInterface<hpx_tag> {
                            const std::shared_ptr<uint8_t> &argsBuffer,
                            const uint32_t bufferSize, const size_t numIters) {
     using FunctionTy = void (*)(const uint8_t *, const uint32_t, size_t);
+
     FunctionTy fn = std::forward<decltype(function)>(function);
-    for (auto i = 0; i < numIters; ++i) fn(argsBuffer.get(), bufferSize, i);
+
+    std::vector<std::size_t> range(numIters);
+    hpx::for_each(range.begin(), range.end(),
+                  [&](const size_t &i) {fn(argsBuffer.get(), bufferSize, i);});
   }
 
   template <typename T>
