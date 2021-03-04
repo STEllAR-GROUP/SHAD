@@ -135,8 +135,7 @@ struct SynchronousInterface<hpx_tag> {
 
     checkLocality(loc);
 
-    std::vector<std::size_t> range(numIters);
-    hpx::for_each(range.begin(), range.end(),
+    hpx::for_loop(hpx::execution::par, 0, numIters,
                   [&](const size_t &i) {fn(args, i);});
   }
 
@@ -150,9 +149,9 @@ struct SynchronousInterface<hpx_tag> {
 
     checkLocality(loc);
 
-    std::vector<std::size_t> range(numIters);
-    hpx::for_each(range.begin(), range.end(),
+    hpx::for_loop(hpx::execution::par, 0, numIters,
                   [&](const size_t &i) {fn(argsBuffer.get(), bufferSize, i);});
+
   }
 
   template <typename FunT, typename InArgsT>
@@ -162,8 +161,7 @@ struct SynchronousInterface<hpx_tag> {
 
     FunctionTy fn = std::forward<decltype(function)>(function);
 
-    std::vector<std::size_t> range(numIters);
-    hpx::for_each(range.begin(), range.end(),
+    hpx::for_loop(hpx::execution::par, 0, numIters,
                   [&](const size_t &i) {fn(args, i);});
   }
 
@@ -175,8 +173,7 @@ struct SynchronousInterface<hpx_tag> {
 
     FunctionTy fn = std::forward<decltype(function)>(function);
 
-    std::vector<std::size_t> range(numIters);
-    hpx::for_each(range.begin(), range.end(),
+    hpx::for_loop(hpx::execution::par, 0, numIters,
                   [&](const size_t &i) {fn(argsBuffer.get(), bufferSize, i);});
   }
 
