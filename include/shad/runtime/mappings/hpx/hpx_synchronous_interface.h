@@ -43,12 +43,25 @@ template <>
 struct SynchronousInterface<hpx_tag> {
   template <typename FunT, typename InArgsT>
   static void executeAt(const Locality &loc, FunT &&function,
-                        const InArgsT &args) {
+                        const InArgsT &args);
+
+  HPX_DEFINE_PLAIN_ACTION(executeAt, executeAt_action);
+
+  template <typename FunT, typename InArgsT>
+  static void executeAt(const Locality &loc, FunT &&function,
+                        const InArgsT &args){
     using FunctionTy = void (*)(const InArgsT &);
 
     checkLocality(loc);
     FunctionTy fn = std::forward<decltype(function)>(function);
-    fn(args);
+
+    // check whether loc is local or remote
+    if (loc == hpx::get_locality_id()){ // local
+      fn(args);
+    }
+    else{ // remote
+      hpx::sync<invoke_function_action<FunT, InArgsT>>{}(loc, fn, args);
+    }
   }
 
   template <typename FunT>
@@ -193,8 +206,8 @@ struct SynchronousInterface<hpx_tag> {
 };
 
 }  // namespace impl
-
 }  // namespace rt
 }  // namespace shad
+
 
 #endif  // INCLUDE_SHAD_RUNTIME_MAPPINGS_HPX_HPX_SYNCHRONOUS_INTERFACE_H_
