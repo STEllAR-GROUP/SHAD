@@ -136,7 +136,7 @@ struct SynchronousInterface<hpx_tag> {
     checkLocality(loc);
 
     hpx::for_loop(hpx::execution::par, 0, numIters,
-                  [&](const size_t &i) {fn(args, i);});
+                  [&](std::size_t i) {fn(args, i);});
   }
 
   template <typename FunT>
@@ -150,7 +150,7 @@ struct SynchronousInterface<hpx_tag> {
     checkLocality(loc);
 
     hpx::for_loop(hpx::execution::par, 0, numIters,
-                  [&](const size_t &i) {fn(argsBuffer.get(), bufferSize, i);});
+                  [&](std::size_t i) {fn(argsBuffer.get(), bufferSize, i);});
 
   }
 
@@ -162,7 +162,7 @@ struct SynchronousInterface<hpx_tag> {
     FunctionTy fn = std::forward<decltype(function)>(function);
 
     hpx::for_loop(hpx::execution::par, 0, numIters,
-                  [&](const size_t &i) {fn(args, i);});
+                  [&](std::size_t i) {fn(args, i);});
   }
 
   template <typename FunT>
@@ -174,7 +174,7 @@ struct SynchronousInterface<hpx_tag> {
     FunctionTy fn = std::forward<decltype(function)>(function);
 
     hpx::for_loop(hpx::execution::par, 0, numIters,
-                  [&](const size_t &i) {fn(argsBuffer.get(), bufferSize, i);});
+                  [&](std::size_t i) {fn(argsBuffer.get(), bufferSize, i);});
   }
 
   template <typename T>
