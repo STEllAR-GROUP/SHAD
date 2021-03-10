@@ -27,6 +27,8 @@
 #include <string>
 #include <vector>
 
+#include <iostream>
+
 #include "gtest/gtest.h"
 
 #include "shad/runtime/runtime.h"
@@ -188,7 +190,7 @@ TEST_F(ExecuteAtTest, AsyncExecuteAtExplicit) {
     shad::rt::executeAt(loc, check, nullptr, 0);
   }
 }
-
+***/
 TEST_F(ExecuteAtTest, AsyncExecuteAt) {
   shad::rt::Handle handle;
   std::vector<exData> argv(shad::rt::numLocalities());
@@ -201,13 +203,14 @@ TEST_F(ExecuteAtTest, AsyncExecuteAt) {
                                argv[static_cast<uint32_t>(loc)]);
     }
   }
+  std::cout << "handle.IsNull(): " << handle.IsNull() << '\n';
   ASSERT_FALSE(handle.IsNull());
   shad::rt::waitForCompletion(handle);
   for (auto loc : shad::rt::allLocalities()) {
     shad::rt::executeAt(loc, check, nullptr, 0);
   }
 }
-***/
+
 TEST_F(ExecuteAtTest, SyncExecuteAt) {
   for (auto loc : shad::rt::allLocalities()) {
     size_t value = kValue + static_cast<uint32_t>(loc);

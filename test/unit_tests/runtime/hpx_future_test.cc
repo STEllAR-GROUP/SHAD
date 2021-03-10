@@ -1,79 +1,144 @@
-#include <hpx/hpx_init.hpp>
-#include <hpx/include/lcos.hpp>
-#include <hpx/include/parallel_generate.hpp>
-#include <hpx/include/parallel_sort.hpp>
-#include <hpx/iostream.hpp>
+//  Copyright (c) 2015 Hartmut Kaiser
+//
+//  SPDX-License-Identifier: BSL-1.0
+//  Distributed under the Boost Software License, Version 1.0. (See accompanying
+//  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <random>
+#include <hpx/hpx.hpp>
+#include <hpx/hpx_init.hpp>
+
+#include <hpx/include/parallel_task_block.hpp>
+#include <hpx/iostream.hpp>
+#include <hpx/modules/testing.hpp>
+#include <hpx/runtime_local/custom_exception_info.hpp>
+
+#include <string>
 #include <vector>
 
-void final_task(
-    hpx::future<hpx::tuple<hpx::future<double>, hpx::future<void>>>)
+using hpx::execution::par;
+using hpx::execution::parallel_task_policy;
+using hpx::execution::task;
+using hpx::parallel::define_task_block;
+using hpx::parallel::task_block;
+
+///////////////////////////////////////////////////////////////////////////////
+void define_task_block_test1()
 {
-    hpx::cout << "in final_task" << hpx::endl;
-}
+    std::string s("test");
 
-// Avoid ABI incompatibilities between C++11/C++17 as std::rand has exception
-// specification in libstdc++.
-int rand_wrapper()
-{
-    return std::rand();
-}
+    bool parent_flag = false;
+    bool task1_flag = false;
+    bool task2_flag = false;
+    bool task21_flag = false;
+    bool task3_flag = false;
 
-int hpx_main(int, char**)
-{
-    // A function can be launched asynchronously. The program will not block
-    // here until the result is available.
-    hpx::future<int> f = hpx::async([]() { return 42; });
-    hpx::cout << "Just launched a task!" << hpx::endl;
+    define_task_block(par, [&](task_block<>& trh) {
+        parent_flag = true;
 
-    // Use get to retrieve the value from the future. This will block this task
-    // until the future is ready, but the HPX runtime will schedule other tasks
-    // if there are tasks available.
-    hpx::cout << "f contains " << f.get() << hpx::endl;
+        trh.run([&]() {
+            task1_flag = true;
+            hpx::cout << "task1: " << s << hpx::endl;
+        });
 
-    // Let's launch another task.
-    hpx::future<double> g = hpx::async([]() { return 3.14; });
+        trh.run([&]() {
+            task2_flag = true;
+            hpx::cout << "task2" << hpx::endl;
 
-    // Tasks can be chained using the then method. The continuation takes the
-    // future as an argument.
-    hpx::future<double> result = g.then([](hpx::future<double>&& gg) {
-        // This function will be called once g is ready. gg is g moved
-        // into the continuation.
-        return gg.get() * 42.0 * 42.0;
+            define_task_block(par, [&](task_block<>& trh) {
+                trh.run([&]() {
+                    task21_flag = true;
+                    hpx::cout << "task2.1" << hpx::endl;
+                });
+            });
+        });
+
+        int i = 0, j = 10, k = 20;
+        trh.run([=, &task3_flag]() {
+            task3_flag = true;
+            hpx::cout << "task3: " << i << " " << j << " " << k << hpx::endl;
+        });
+
+        hpx::cout << "parent" << hpx::endl;
     });
 
-    // You can check if a future is ready with the is_ready method.
-    hpx::cout << "Result is ready? " << result.is_ready() << hpx::endl;
+    HPX_TEST(parent_flag);
+    HPX_TEST(task1_flag);
+    HPX_TEST(task2_flag);
+    HPX_TEST(task21_flag);
+    HPX_TEST(task3_flag);
+}
 
-    // You can launch other work in the meantime. Let's sort a vector.
-    std::vector<int> v(1000000);
+///////////////////////////////////////////////////////////////////////////////
+void define_task_block_test2()
+{
+    std::string s("test");
 
-    // We fill the vector synchronously and sequentially.
-    hpx::generate(hpx::execution::seq, std::begin(v), std::end(v),
-        &rand_wrapper);
+    bool parent_flag = false;
+    bool task1_flag = false;
+    bool task2_flag = false;
+    bool task21_flag = false;
+    bool task3_flag = false;
 
-    // We can launch the sort in parallel and asynchronously.
-    hpx::future<void> done_sorting = hpx::parallel::sort(
-        hpx::execution::par(          // In parallel.
-            hpx::execution::task),    // Asynchronously.
-        std::begin(v), std::end(v));
+    hpx::future<void> f = define_task_block(
+        par(task), [&](task_block<parallel_task_policy>& trh) {
+            parent_flag = true;
 
-    // We launch the final task when the vector has been sorted and result is
-    // ready using when_all.
-    auto all = hpx::when_all(result, done_sorting).then(&final_task);
+            trh.run([&]() {
+                task1_flag = true;
+                hpx::cout << "task1: " << s << hpx::endl;
+            });
 
-    // We can wait for all to be ready.
-    all.wait();
+            trh.run([&]() {
+                task2_flag = true;
+                hpx::cout << "task2" << hpx::endl;
 
-    // all must be ready at this point because we waited for it to be ready.
-    hpx::cout << (all.is_ready() ? "all is ready!" : "all is not ready...")
-              << hpx::endl;
+                define_task_block(par, [&](task_block<>& trh) {
+                    trh.run([&]() {
+                        task21_flag = true;
+                        hpx::cout << "task2.1" << hpx::endl;
+                    });
+                });
+            });
+
+            int i = 0, j = 10, k = 20;
+            trh.run([=, &task3_flag]() {
+                task3_flag = true;
+                hpx::cout << "task3: " << i << " " << j << " " << k
+                          << hpx::endl;
+            });
+
+            hpx::cout << "parent" << hpx::endl;
+        });
+
+    f.wait();
+
+    HPX_TEST(parent_flag);
+    HPX_TEST(task1_flag);
+    HPX_TEST(task2_flag);
+    HPX_TEST(task21_flag);
+    HPX_TEST(task3_flag);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+int hpx_main()
+{
+    define_task_block_test1();
+    define_task_block_test2();
 
     return hpx::finalize();
 }
 
 int main(int argc, char* argv[])
 {
-    return hpx::init(argc, argv);
+    // By default this test should run on all available cores
+    std::vector<std::string> const cfg = {"hpx.os_threads=all"};
+
+    // Initialize and run HPX
+    hpx::init_params init_args;
+    init_args.cfg = cfg;
+    HPX_TEST_EQ_MSG(hpx::init(argc, argv, init_args), 0,
+        "HPX main exited with non-zero status");
+
+    return hpx::util::report_errors();
 }

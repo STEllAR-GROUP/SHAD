@@ -30,12 +30,29 @@
 #include <memory>
 #include <utility>
 
+#include "hpx/hpx.hpp"
+
 #include "shad/runtime/asynchronous_interface.h"
 #include "shad/runtime/handle.h"
 #include "shad/runtime/locality.h"
 #include "shad/runtime/mapping_traits.h"
 #include "shad/runtime/mappings/hpx/hpx_traits_mapping.h"
 #include "shad/runtime/mappings/hpx/hpx_utility.h"
+
+
+#include <hpx/include/parallel_task_block.hpp>
+#include <hpx/iostream.hpp>
+#include <hpx/modules/testing.hpp>
+#include <hpx/runtime_local/custom_exception_info.hpp>
+
+#include <string>
+#include <vector>
+
+using hpx::execution::par;
+using hpx::execution::parallel_task_policy;
+using hpx::execution::task;
+using hpx::parallel::define_task_block;
+using hpx::parallel::task_block;
 
 namespace shad {
 namespace rt {
@@ -47,12 +64,21 @@ struct AsynchronousInterface<hpx_tag> {
   template <typename FunT, typename InArgsT>
   static void asyncExecuteAt(Handle &handle, const Locality &loc,
                              FunT &&function, const InArgsT &args) {
+    using FunctionTy = void (*)(Handle &, const InArgsT &);
+
+    FunctionTy fn = std::forward<decltype(function)>(function);
+
     checkLocality(loc);
+
     handle.id_ =
         handle.IsNull() ? HandleTrait<hpx_tag>::CreateNewHandle() : handle.id_;
-    using FunctionTy = void (*)(Handle &, const InArgsT &);
-    FunctionTy fn = std::forward<decltype(function)>(function);
-    fn(handle, args);
+
+    hpx::future<void> f = define_task_block(
+        par(task), [&](task_block<parallel_task_policy>& trh) {
+            trh.run([=, &handle]() { fn(handle, args); });
+        });
+
+    f.wait();
   }
 
   template <typename FunT>
