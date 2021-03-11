@@ -182,12 +182,19 @@ struct AsynchronousInterface<hpx_tag> {
   static void asyncForEachAt(Handle &handle, const Locality &loc,
                              FunT &&function, const InArgsT &args,
                              const size_t numIters) {
+    using FunctionTy = void (*)(Handle &, const InArgsT &, size_t);
+
+    FunctionTy fn = std::forward<decltype(function)>(function);
+
     checkLocality(loc);
+
     handle.id_ =
         handle.IsNull() ? HandleTrait<hpx_tag>::CreateNewHandle() : handle.id_;
-    using FunctionTy = void (*)(Handle &, const InArgsT &, size_t);
-    FunctionTy fn = std::forward<decltype(function)>(function);
-    for (auto i = 0; i < numIters; ++i) fn(handle, args, i);
+
+    handle.id_->run([=, &handle] {
+      hpx::for_loop(hpx::execution::par, 0, numIters,
+                  [=, &handle](std::size_t i) {fn(handle, args, i);});
+    });
   }
 
   template <typename FunT>
@@ -195,24 +202,41 @@ struct AsynchronousInterface<hpx_tag> {
                              FunT &&function,
                              const std::shared_ptr<uint8_t> &argsBuffer,
                              const uint32_t bufferSize, const size_t numIters) {
-    checkLocality(loc);
-    handle.id_ =
-        handle.IsNull() ? HandleTrait<hpx_tag>::CreateNewHandle() : handle.id_;
     using FunctionTy =
         void (*)(Handle &, const uint8_t *, const uint32_t, size_t);
+
     FunctionTy fn = std::forward<decltype(function)>(function);
-    for (auto i = 0; i < numIters; ++i)
-      fn(handle, argsBuffer.get(), bufferSize, i);
+
+    checkLocality(loc);
+
+    handle.id_ =
+        handle.IsNull() ? HandleTrait<hpx_tag>::CreateNewHandle() : handle.id_;
+
+    handle.id_->run([=, &handle] {
+      hpx::for_loop(hpx::execution::par, 0, numIters,
+                  [=, &handle](std::size_t i) {
+                    fn(handle, argsBuffer.get(), bufferSize, i);
+                  });
+    });
+
   }
 
   template <typename FunT, typename InArgsT>
   static void asyncForEachOnAll(Handle &handle, FunT &&function,
                                 const InArgsT &args, const size_t numIters) {
+    using FunctionTy = void (*)(Handle &, const InArgsT &, size_t);
+
+    FunctionTy fn = std::forward<decltype(function)>(function);
+
     handle.id_ =
         handle.IsNull() ? HandleTrait<hpx_tag>::CreateNewHandle() : handle.id_;
-    using FunctionTy = void (*)(Handle &, const InArgsT &, size_t);
-    FunctionTy fn = std::forward<decltype(function)>(function);
-    for (auto i = 0; i < numIters; ++i) fn(handle, args, i);
+
+    handle.id_->run([=, &handle] {
+      hpx::for_loop(hpx::execution::par, 0, numIters,
+                  [=, &handle](std::size_t i) {
+                    fn(handle, args, i);
+                  });
+    });
   }
 
   template <typename FunT>
@@ -220,14 +244,22 @@ struct AsynchronousInterface<hpx_tag> {
                                 const std::shared_ptr<uint8_t> &argsBuffer,
                                 const uint32_t bufferSize,
                                 const size_t numIters) {
-    handle.id_ =
-        handle.IsNull() ? HandleTrait<hpx_tag>::CreateNewHandle() : handle.id_;
     using FunctionTy =
         void (*)(Handle &, const uint8_t *, const uint32_t, size_t);
+
     FunctionTy fn = std::forward<decltype(function)>(function);
-    for (auto i = 0; i < numIters; ++i)
-      fn(handle, argsBuffer.get(), bufferSize, i);
+
+    handle.id_ =
+        handle.IsNull() ? HandleTrait<hpx_tag>::CreateNewHandle() : handle.id_;
+
+    handle.id_->run([=, &handle] {
+      hpx::for_loop(hpx::execution::par, 0, numIters,
+                  [=, &handle](std::size_t i) {
+                    fn(handle, argsBuffer.get(), bufferSize, i);
+                  });
+    });
   }
+
 };
 
 }  // namespace impl
