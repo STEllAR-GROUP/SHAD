@@ -28,10 +28,11 @@
 #include <cstdint>
 #include <limits>
 #include <memory>
-#include <mutex>
 #include <string>
 
 #include "hpx/hpx.hpp"
+#include <hpx/include/task_group.hpp>
+
 #include "shad/runtime/mapping_traits.h"
 
 namespace shad {
@@ -41,35 +42,36 @@ namespace impl {
 
 struct hpx_tag {};
 
-
-struct HpxHandle {};
-
 template <>
 struct HandleTrait<hpx_tag> {
-  using HandleTy = hpx::shared_future<void>;
-  using ParameterTy = hpx::shared_future<void> &;
-  using ConstParameterTy = const hpx::shared_future<void> &;
+  using HandleTy = std::shared_ptr<hpx::task_group<>>;
+  using ParameterTy = std::shared_ptr<hpx::task_group<>> &;
+  using ConstParameterTy = const std::shared_ptr<hpx::task_group<>> &;
 
-  static void Init(ParameterTy H, ConstParameterTy V) { H = V; }
+  static void Init(ParameterTy H, ConstParameterTy V) {}
 
-  static HandleTy NullValue() { return hpx::shared_future<void>(); }
+  static HandleTy NullValue() {
+    return std::shared_ptr<hpx::task_group<>>(nullptr);
+  }
 
   static bool Equal(ConstParameterTy lhs, ConstParameterTy rhs) {
-    return toUnsignedInt(lhs) == toUnsignedInt(rhs);
+    return lhs == rhs;
   }
 
-  static std::string toString(ConstParameterTy H) {
-    return std::to_string(toUnsignedInt(H));
-  }
+  static std::string toString(ConstParameterTy H) { return ""; }
 
   static uint64_t toUnsignedInt(ConstParameterTy H) {
-    return reinterpret_cast<uint64_t>(
-        hpx::traits::detail::get_shared_state(H).get());
+    return reinterpret_cast<uint64_t>(H.get());
   }
 
-  static HandleTy CreateNewHandle() { return hpx::shared_future<void>(); }
+  static HandleTy CreateNewHandle() {
+    return std::shared_ptr<hpx::task_group<>>(new hpx::task_group<>());
+  }
 
-  static void WaitFor(ParameterTy H) { if (H.valid()) H.get(); }
+  static void WaitFor(ParameterTy H) {
+    if (H == nullptr) return;
+    H->wait();
+  }
 };
 
 template <>
