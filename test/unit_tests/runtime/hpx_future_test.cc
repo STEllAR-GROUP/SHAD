@@ -14,6 +14,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 using hpx::execution::par;
 using hpx::execution::parallel_task_policy;
@@ -69,8 +70,7 @@ void task_group_test1()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/***
-void task_group_test2()
+void task_group_test3()
 {
     std::string s("test");
 
@@ -80,48 +80,49 @@ void task_group_test2()
     bool task21_flag = false;
     bool task3_flag = false;
 
-    hpx::future<void> f = [&](task_group g){
-        parent_flag = true;
-        g.run([&](){
-            task1_flag = true;
-            hpx::cout << "task1: " << s << hpx::endl;
+
+    task_group g;
+    using a = std::shared_ptr<task_group<>>;
+    parent_flag = true;
+    g.run([&](){
+        task1_flag = true;
+        hpx::cout << "task1: " << s << hpx::endl;
+    });
+
+    g.run([&] {
+        task2_flag = true;
+        hpx::cout << "task2: " << hpx::endl;
+        task_group h;
+        h.run([&]{
+            task21_flag = true;
+            hpx::cout << "task2.1: " << s << hpx::endl;
         });
+    });
 
-        //g.run([&] {
-        //    task2_flag = true;
-        //    hpx::cout << "task2: " << hpx::endl;
-        //    task_group h;
-        //    h.run([&]{
-        //        task21_flag = true;
-        //        hpx::cout << "task2.1: " << s << hpx::endl;
-        //    });
-        //});
+    int i = 0, j = 10, k = 20;
+    g.run([=, &task3_flag]() {
+        task3_flag = true;
+        hpx::cout << "task3: " << i << " " << j << " " << k << hpx::endl;
+    });
 
-        //int i = 0, j = 10, k = 20;
-        //g.run([=, &task3_flag]() {
-        //    task3_flag = true;
-        //    hpx::cout << "task3: " << i << " " << j << " " << k << hpx::endl;
-        //});
+    hpx::cout << "parent" << hpx::endl;
 
-    //    hpx::cout << "parent" << hpx::endl;
-    };
-//
-    f.wait();
+    g.wait();
+
 
     HPX_TEST(parent_flag);
-    hpx::cout << "parent_flag: " << parent_flag << hpx::endl;
-    //HPX_TEST(task1_flag);
-    //HPX_TEST(task2_flag);
-    //HPX_TEST(task21_flag);
-    //HPX_TEST(task3_flag);
+    HPX_TEST(task1_flag);
+    HPX_TEST(task2_flag);
+    HPX_TEST(task21_flag);
+    HPX_TEST(task3_flag);
 
 }
-***/
 ///////////////////////////////////////////////////////////////////////////////
 int hpx_main()
 {
-    task_group_test1();
+    //task_group_test1();
     //task_group_test2();
+    task_group_test3();
 
     return hpx::finalize();
 }
