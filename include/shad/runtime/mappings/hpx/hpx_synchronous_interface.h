@@ -50,14 +50,14 @@ struct SynchronousInterface<hpx_tag> {
     checkLocality(loc);
     FunctionTy fn = std::forward<decltype(function)>(function);
 
-    using action_type = hpx::components::server::invoke_function_action<
-            decltype(fn), InArgsT &>;
-
-    hpx::future<void> result = hpx::async<action_type>(hpx::find_here(),
-            reinterpret_cast<std::size_t>(fn), args);
-
-    result.get();
-    //fn(args);
+    //using action_type = hpx::components::server::invoke_function_action<
+    //        FunctionTy, const InArgsT &>;
+//
+    //hpx::future<void> result = hpx::async<action_type>(hpx::find_here(),
+    //        reinterpret_cast<std::size_t>(fn), hpx::serialization::make_array(&args, sizeof(args)));
+//
+    //result.get();
+    fn(args);
   }
 
   template <typename FunT>
