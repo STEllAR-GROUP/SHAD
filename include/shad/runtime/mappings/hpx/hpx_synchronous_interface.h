@@ -30,6 +30,8 @@
 #include <utility>
 
 #include "hpx/hpx.hpp"
+#include <hpx/serialization/serialize_buffer.hpp>
+
 #include "shad/runtime/locality.h"
 #include "shad/runtime/mappings/hpx/hpx_traits_mapping.h"
 #include "shad/runtime/mappings/hpx/hpx_utility.h"
@@ -49,14 +51,6 @@ struct SynchronousInterface<hpx_tag> {
 
     checkLocality(loc);
     FunctionTy fn = std::forward<decltype(function)>(function);
-
-    //using action_type = hpx::components::server::invoke_function_action<
-    //        FunctionTy, const InArgsT &>;
-//
-    //hpx::future<void> result = hpx::async<action_type>(hpx::find_here(),
-    //        reinterpret_cast<std::size_t>(fn), hpx::serialization::make_array(&args, sizeof(args)));
-//
-    //result.get();
     fn(args);
   }
 
