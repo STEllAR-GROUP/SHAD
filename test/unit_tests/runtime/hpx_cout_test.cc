@@ -10,7 +10,7 @@
 // function is the same on all localities.
 
 #include <hpx/hpx.hpp>
-#include <hpx/hpx_main.hpp>
+#include <hpx/hpx_init.hpp>
 #include <hpx/serialization/serialize_buffer.hpp>
 
 #include <cstddef>
@@ -34,7 +34,7 @@ namespace example {
                 hpx::serialization::serialize_buffer<std::uint8_t> args)
             {
                 return reinterpret_cast<R (*)(T)>(f)(
-                    std::move(*reinterpret_cast<T*>(args.data())));
+                    std::move(*reinterpret_cast<std::decay_t<T>*>(args.data())));
             }
         };
     }    // namespace detail
@@ -62,7 +62,9 @@ int call_me(int arg)
     return arg;
 }
 
-int main(int, char*[])
+void void_call_me(const int &arg) {std::cout << "Yah!" << '\n';}
+
+int hpx_main()
 {
     // The function pointer is casted to a std::size_t to avoid compilation
     // problems complaining about raw pointers being used as action parameters.
@@ -83,5 +85,32 @@ int main(int, char*[])
         std::cout << "the action invocation returned: " << result.get() << "\n";
     }
 
-    return 0;
+    {
+        using action_type = example::invoke_function_action<decltype(&void_call_me)>;
+        using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
+
+        const int &arg = 42;
+
+        hpx::future<void> result = hpx::async<action_type>(hpx::find_here(),
+            reinterpret_cast<std::size_t>(&void_call_me),
+            buffer_type(const_cast<std::uint8_t*>(reinterpret_cast<const std::uint8_t*>(&arg)), sizeof(arg),
+                buffer_type::reference));
+
+        result.get();
+    }
+
+    return hpx::finalize();
+}
+
+int main(int argc, char* argv[])
+{
+    // Configure application-specific options
+    hpx::program_options::options_description
+       desc_commandline("Usage: " HPX_APPLICATION_STRING " [options]");
+
+    // Initialize and run HPX
+    hpx::init_params init_args;
+    init_args.desc_cmdline = desc_commandline;
+
+    return hpx::init(argc, argv, init_args);
 }
