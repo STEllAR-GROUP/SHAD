@@ -25,6 +25,7 @@
 #ifndef INCLUDE_SHAD_RUNTIME_MAPPINGS_HPX_HPX_SYNCHRONOUS_INTERFACE_H_
 #define INCLUDE_SHAD_RUNTIME_MAPPINGS_HPX_HPX_SYNCHRONOUS_INTERFACE_H_
 
+#include <cstddef>
 #include <memory>
 #include <utility>
 
@@ -48,7 +49,15 @@ struct SynchronousInterface<hpx_tag> {
 
     checkLocality(loc);
     FunctionTy fn = std::forward<decltype(function)>(function);
-    fn(args);
+
+    using action_type = hpx::components::server::invoke_function_action<
+            decltype(fn), InArgsT &>;
+
+    hpx::future<void> result = hpx::async<action_type>(hpx::find_here(),
+            reinterpret_cast<std::size_t>(fn), args);
+
+    result.get();
+    //fn(args);
   }
 
   template <typename FunT>
