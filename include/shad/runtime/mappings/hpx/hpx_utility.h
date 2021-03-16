@@ -30,6 +30,8 @@
 #include <sstream>
 #include <system_error>
 
+#include "hpx/hpx.hpp"
+
 #include "shad/runtime/locality.h"
 
 namespace shad {
