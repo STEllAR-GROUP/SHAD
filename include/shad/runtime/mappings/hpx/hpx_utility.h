@@ -29,8 +29,11 @@
 #include <cstdint>
 #include <sstream>
 #include <system_error>
+#include <utility>
 
 #include "hpx/hpx.hpp"
+#include <hpx/hpx_init.hpp>
+#include "hpx/serialization/serialize_buffer.hpp"
 
 #include "shad/runtime/locality.h"
 
@@ -45,13 +48,45 @@ inline uint32_t getLocalityId(const Locality &loc) {
 
 inline void checkLocality(const Locality& loc) {
   uint32_t localityID = getLocalityId(loc);
-  Locality L(0);
   if (localityID >= hpx::get_num_localities(hpx::launch::sync)) {
     std::stringstream ss;
     ss << "The system does not include " << loc;
     throw std::system_error(0xdeadc0de, std::generic_category(), ss.str());
   }
 }
+
+namespace detail {
+    ///////////////////////////////////////////////////////////////////////
+    // simple utility action which invoke an arbitrary global function
+    template <typename F>
+    struct invoke_function_ptr;
+    template <typename R, typename T>
+    struct invoke_function_ptr<R (*)(T)>
+    {
+        static R call(std::size_t f,
+            hpx::serialization::serialize_buffer<std::uint8_t> args)
+        {
+            return reinterpret_cast<R (*)(T)>(f)(
+                std::move(*reinterpret_cast<std::decay_t<T>*>(args.data())));
+        }
+    };
+}    // namespace detail
+// action definition exposing invoke_function_ptr<> that binds a global
+// function (Note: this assumes global function addresses are the same on
+// all localities. This also assumes that all argument types are bitwise
+// copyable
+template <typename F>
+struct invoke_function_action;
+template <typename R, typename T>
+struct invoke_function_action<R (*)(T)>
+  : ::hpx::actions::action<
+        R (*)(std::size_t,
+            hpx::serialization::serialize_buffer<std::uint8_t>),
+        &detail::invoke_function_ptr<R (*)(T)>::call,
+        invoke_function_action<R (*)(T)>>
+{
+};
+
 
 }  // namespace impl
 
