@@ -26,11 +26,11 @@
 #define INCLUDE_SHAD_RUNTIME_MAPPINGS_HPX_HPX_SYNCHRONOUS_INTERFACE_H_
 
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <utility>
 
 #include "hpx/hpx.hpp"
-#include <hpx/serialization/serialize_buffer.hpp>
 
 #include "shad/runtime/locality.h"
 #include "shad/runtime/mappings/hpx/hpx_traits_mapping.h"
@@ -51,7 +51,18 @@ struct SynchronousInterface<hpx_tag> {
 
     checkLocality(loc);
     FunctionTy fn = std::forward<decltype(function)>(function);
-    fn(args);
+
+    using action_type = invoke_function_action<decltype(fn)>;
+    using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
+
+    hpx::future<void> result = hpx::async<action_type>(hpx::find_here(),
+        reinterpret_cast<std::size_t>(fn),
+        buffer_type(
+            const_cast<std::uint8_t*>(
+                reinterpret_cast<const std::uint8_t*>(&args)),
+            sizeof(args),
+            buffer_type::reference));
+    result.get();
   }
 
   template <typename FunT>
@@ -62,6 +73,7 @@ struct SynchronousInterface<hpx_tag> {
 
     FunctionTy fn = std::forward<decltype(function)>(function);
     checkLocality(loc);
+
     fn(argsBuffer.get(), bufferSize);
   }
 
