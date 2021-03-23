@@ -108,38 +108,40 @@ int hpx_main()
         std::cout << "the action invocation returned: " << result.get() << "\n";
     }
 
-    {
-        using action_type = example::invoke_function_action<decltype(&void_call_me)>;
-        using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
-
-        const int &arg = 42;
-
-        hpx::future<void> result = hpx::async<action_type>(hpx::find_here(),
-            reinterpret_cast<std::size_t>(&void_call_me),
-            buffer_type(const_cast<std::uint8_t*>(reinterpret_cast<const std::uint8_t*>(&arg)), sizeof(arg),
-                buffer_type::reference));
-
-        result.get();
-    }
+    //{
+    //    using action_type = example::invoke_function_action<decltype(&void_call_me)>;
+    //    using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
+//
+    //    struct wrapperArgs {
+    //      const int arg1;
+    //    } arg = {.arg1=42};
+//
+    //    //const int arg = 42;
+//
+    //    hpx::future<void> result = hpx::async<action_type>(hpx::find_here(),
+    //        reinterpret_cast<std::size_t>(&void_call_me),
+    //        buffer_type(reinterpret_cast< std::uint8_t*>(&arg), sizeof(arg),
+    //            buffer_type::reference));
+//
+    //    result.get();
+    //}
 
     {
         using action_type = example::invoke_function_action<decltype(&void_test)>;
         using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
         struct wrapperArgs {
-          const int & arg1;
-          const int & arg2;
-        } arg = {.arg1=42, .arg2= 6};
-
-        //wrapperArgs arg;
-        //const int &arg1 = 42;
-        //const int &arg2 = 12;
-
-        //new_size = sizeof(arg.arg1) + sizeof(arg.arg2);
+          const int arg1;
+          const int arg2;
+        };
+        wrapperArgs arg = {
+            42, // arg1
+            6, // arg2
+        };
 
         hpx::future<void> result = hpx::async<action_type>(hpx::find_here(),
             reinterpret_cast<std::size_t>(&void_test),
-            buffer_type(const_cast<std::uint8_t*>(reinterpret_cast<const std::uint8_t*>(&arg)), (sizeof(arg.arg1) + sizeof(arg.arg2)),
+            buffer_type(reinterpret_cast< std::uint8_t*>(&arg), sizeof(arg),
                 buffer_type::reference));
 
         result.get();
