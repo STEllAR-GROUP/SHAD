@@ -60,14 +60,25 @@ namespace detail {
     // simple utility action which invoke an arbitrary global function
     template <typename F>
     struct invoke_function_ptr;
-    template <typename R, typename T>
-    struct invoke_function_ptr<R (*)(T)>
+    //template <typename R, typename T>
+    //struct invoke_function_ptr<R (*)(T)>
+    //{
+    //    static R call(std::size_t f,
+    //        hpx::serialization::serialize_buffer<std::uint8_t> args)
+    //    {
+    //        return reinterpret_cast<R (*)(T)>(f)(
+    //            std::move(*reinterpret_cast<std::decay_t<T>*>(args.data())));
+    //    }
+    //};
+
+    template <typename R, typename... Ts>
+    struct invoke_function_ptr<R (*)(Ts...)>
     {
         static R call(std::size_t f,
-            hpx::serialization::serialize_buffer<std::uint8_t> args)
+            hpx::serialization::serialize_buffer<std::uint8_t> ts)
         {
-            return reinterpret_cast<R (*)(T)>(f)(
-                std::move(*reinterpret_cast<std::decay_t<T>*>(args.data())));
+            return reinterpret_cast<R (*)(Ts...)>(f)(
+                std::move(*reinterpret_cast<std::decay_t<Ts>*>(ts.data()))...);
         }
     };
 }    // namespace detail
@@ -77,13 +88,23 @@ namespace detail {
 // copyable
 template <typename F>
 struct invoke_function_action;
-template <typename R, typename T>
-struct invoke_function_action<R (*)(T)>
+//template <typename R, typename T>
+//struct invoke_function_action<R (*)(T)>
+//  : ::hpx::actions::action<
+//        R (*)(std::size_t,
+//            hpx::serialization::serialize_buffer<std::uint8_t>),
+//        &detail::invoke_function_ptr<R (*)(T)>::call,
+//        invoke_function_action<R (*)(T)>>
+//{
+//};
+
+template <typename R, typename... Ts>
+struct invoke_function_action<R (*)(Ts...)>
   : ::hpx::actions::action<
         R (*)(std::size_t,
             hpx::serialization::serialize_buffer<std::uint8_t>),
-        &detail::invoke_function_ptr<R (*)(T)>::call,
-        invoke_function_action<R (*)(T)>>
+        &detail::invoke_function_ptr<R (*)(Ts...)>::call,
+        invoke_function_action<R (*)(Ts...)>>
 {
 };
 
