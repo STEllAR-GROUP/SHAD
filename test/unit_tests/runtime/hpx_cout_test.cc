@@ -27,14 +27,25 @@ namespace example {
         template <typename F>
         struct invoke_function_ptr;
 
-        template <typename R, typename T>
-        struct invoke_function_ptr<R (*)(T)>
+        //template <typename R, typename T>
+        //struct invoke_function_ptr<R (*)(T)>
+        //{
+        //    static R call(std::size_t f,
+        //        hpx::serialization::serialize_buffer<std::uint8_t> args)
+        //    {
+        //        return reinterpret_cast<R (*)(T)>(f)(
+        //            std::move(*reinterpret_cast<std::decay_t<T>*>(args.data())));
+        //    }
+        //};
+
+        template <typename R, typename... Ts>
+        struct invoke_function_ptr<R (*)(Ts...)>
         {
             static R call(std::size_t f,
-                hpx::serialization::serialize_buffer<std::uint8_t> args)
+                hpx::serialization::serialize_buffer<std::uint8_t> ts)
             {
-                return reinterpret_cast<R (*)(T)>(f)(
-                    std::move(*reinterpret_cast<std::decay_t<T>*>(args.data())));
+                return reinterpret_cast<R (*)(Ts...)>(f)(
+                    std::move(*reinterpret_cast<std::decay_t<Ts>*>(ts.data())...));
             }
         };
     }    // namespace detail
@@ -46,13 +57,23 @@ namespace example {
     template <typename F>
     struct invoke_function_action;
 
-    template <typename R, typename T>
-    struct invoke_function_action<R (*)(T)>
+    //template <typename R, typename T>
+    //struct invoke_function_action<R (*)(T)>
+    //  : ::hpx::actions::action<
+    //        R (*)(std::size_t,
+    //            hpx::serialization::serialize_buffer<std::uint8_t>),
+    //        &detail::invoke_function_ptr<R (*)(T)>::call,
+    //        invoke_function_action<R (*)(T)>>
+    //{
+    //};
+
+    template <typename R, typename... Ts>
+    struct invoke_function_action<R (*)(Ts...)>
       : ::hpx::actions::action<
             R (*)(std::size_t,
                 hpx::serialization::serialize_buffer<std::uint8_t>),
-            &detail::invoke_function_ptr<R (*)(T)>::call,
-            invoke_function_action<R (*)(T)>>
+            &detail::invoke_function_ptr<R (*)(Ts...)>::call,
+            invoke_function_action<R (*)(Ts...)>>
     {
     };
 }    // namespace example
@@ -63,6 +84,8 @@ int call_me(int arg)
 }
 
 void void_call_me(const int &arg) {std::cout << "Yah!" << '\n';}
+
+void void_test(const int &arg1, const int &arg2){std::cout << "test!" << '\n';}
 
 int hpx_main()
 {
@@ -98,6 +121,29 @@ int hpx_main()
 
         result.get();
     }
+
+    //{
+    //    using action_type = example::invoke_function_action<decltype(&void_test)>;
+    //    using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
+//
+    //    struct wrapperArgs {
+    //      const int & arg1;
+    //      const int & arg2;
+    //    } arg = {.arg1=42, .arg2= 6};
+//
+    //    //wrapperArgs arg;
+    //    //const int &arg1 = 42;
+    //    //const int &arg2 = 12;
+//
+    //    //new_size = sizeof(arg.arg1) + sizeof(arg.arg2);
+//
+    //    hpx::future<void> result = hpx::async<action_type>(hpx::find_here(),
+    //        reinterpret_cast<std::size_t>(&void_test),
+    //        buffer_type(const_cast<std::uint8_t*>(reinterpret_cast<const std::uint8_t*>(&arg)), (sizeof(arg.arg1) + sizeof(arg.arg2)),
+    //            buffer_type::reference));
+//
+    //    result.get();
+    //}
 
     return hpx::finalize();
 }
