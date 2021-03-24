@@ -101,25 +101,26 @@ struct SynchronousInterface<hpx_tag> {
     FunctionTy fn = std::forward<decltype(function)>(function);
     checkLocality(loc);
 
-    //using action_type = invoke_function_action<decltype(fn)>;
-    //using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
-//
-    //struct wrapperArgs {
-    //  const InArgsT arg1;
-    //  uint8_t * arg2;
-    //  uint32_t * arg3;
-    //};
-    //wrapperArgs allArgs = {args, resultBuffer, resultSize};
-//
-    //hpx::future<void> result = hpx::async<action_type>(hpx::find_here(),
-    //    reinterpret_cast<std::size_t>(fn),
-    //    buffer_type(
-    //        reinterpret_cast<std::uint8_t*>(&allArgs),
-    //        sizeof(allArgs),
-    //        buffer_type::reference));
-    //result.get();
+    using action_type = invoke_function_action<decltype(fn)>;
+    using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
-    fn(args, resultBuffer, resultSize);
+    struct wrapperArgs {
+      InArgsT arg1;
+      uint8_t * arg2;
+      uint32_t * arg3;
+    };
+
+    wrapperArgs allArgs = {args, resultBuffer, resultSize};
+
+    hpx::future<void> result = hpx::async<action_type>(hpx::find_here(),
+        reinterpret_cast<std::size_t>(fn),
+        buffer_type(
+            reinterpret_cast<std::uint8_t*>(&allArgs),
+            sizeof(allArgs),
+            buffer_type::reference));
+    result.get();
+
+    //fn(args, resultBuffer, resultSize);
   }
 
   template <typename FunT>
