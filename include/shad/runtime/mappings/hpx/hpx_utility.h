@@ -60,27 +60,44 @@ namespace detail {
     // simple utility action which invoke an arbitrary global function
     template <typename F>
     struct invoke_function_ptr;
-    //template <typename R, typename T>
-    //struct invoke_function_ptr<R (*)(T)>
-    //{
-    //    static R call(std::size_t f,
-    //        hpx::serialization::serialize_buffer<std::uint8_t> args)
-    //    {
-    //        return reinterpret_cast<R (*)(T)>(f)(
-    //            std::move(*reinterpret_cast<std::decay_t<T>*>(args.data())));
-    //    }
-    //};
-
-    template <typename R, typename... Ts>
-    struct invoke_function_ptr<R (*)(Ts...)>
+    template <typename R, typename T>
+    struct invoke_function_ptr<R (*)(T)>
     {
         static R call(std::size_t f,
-            hpx::serialization::serialize_buffer<std::uint8_t> ts)
+            hpx::serialization::serialize_buffer<std::uint8_t> args)
         {
-            return reinterpret_cast<R (*)(Ts...)>(f)(
-                std::move(*reinterpret_cast<std::decay_t<Ts>*>(ts.data()))...);
+            return reinterpret_cast<R (*)(T)>(f)(
+                std::move(*reinterpret_cast<std::decay_t<T>*>(args.data())));
         }
     };
+
+    struct invoke_function_buffer
+    {
+        static void call(std::size_t f,
+            hpx::serialization::serialize_buffer<std::uint8_t> args)
+        {
+            reinterpret_cast<void (*)(const uint8_t *, const uint32_t)>(f)(
+                args.data(), args.size());
+        }
+    };
+    template <typename F>
+    struct invoke_function_with_ret;
+    template <typename T>
+    struct invoke_function_with_ret<void (*)(T, std::uint8_t*, std::uint32_t*)>
+    {
+        static hpx::serialization::serialize_buffer<std::uint8_t> call(std::size_t f,
+            hpx::serialization::serialize_buffer<std::uint8_t> args, std::uint32_t size)
+        {
+            hpx::serialization::serialize_buffer<std::uint8_t> result(size);
+
+            reinterpret_cast<void (*)(T, std::uint8_t*, std::uint32_t*)>(f)(
+                std::move(*reinterpret_cast<std::decay_t<T>*>(args.data())), 
+                result.data(), &size);
+
+            return result;
+        }
+    };
+
 }    // namespace detail
 // action definition exposing invoke_function_ptr<> that binds a global
 // function (Note: this assumes global function addresses are the same on
@@ -88,23 +105,35 @@ namespace detail {
 // copyable
 template <typename F>
 struct invoke_function_action;
-//template <typename R, typename T>
-//struct invoke_function_action<R (*)(T)>
-//  : ::hpx::actions::action<
-//        R (*)(std::size_t,
-//            hpx::serialization::serialize_buffer<std::uint8_t>),
-//        &detail::invoke_function_ptr<R (*)(T)>::call,
-//        invoke_function_action<R (*)(T)>>
-//{
-//};
-
-template <typename R, typename... Ts>
-struct invoke_function_action<R (*)(Ts...)>
+template <typename R, typename T>
+struct invoke_function_action<R (*)(T)>
   : ::hpx::actions::action<
         R (*)(std::size_t,
             hpx::serialization::serialize_buffer<std::uint8_t>),
-        &detail::invoke_function_ptr<R (*)(Ts...)>::call,
-        invoke_function_action<R (*)(Ts...)>>
+        &detail::invoke_function_ptr<R (*)(T)>::call,
+        invoke_function_action<R (*)(T)>>
+{
+};
+
+struct invoke_function_buffer_action
+  : ::hpx::actions::action<
+        void (*)(std::size_t,
+            hpx::serialization::serialize_buffer<std::uint8_t>),
+        &detail::invoke_function_buffer::call,
+        invoke_function_buffer_action>
+{
+};
+
+template <typename F>
+struct invoke_function_with_ret_action;
+template <typename T>
+struct invoke_function_with_ret_action<void (*)(T, std::uint8_t*, std::uint32_t*)>
+  : ::hpx::actions::action<
+        hpx::serialization::serialize_buffer<std::uint8_t> (*)(std::size_t,
+            hpx::serialization::serialize_buffer<std::uint8_t>, std::uint32_t),
+        &detail::invoke_function_with_ret<
+            void (*)(T, std::uint8_t*, std::uint32_t*)>::call,
+        invoke_function_with_ret_action<void (*)(T, std::uint8_t*, std::uint32_t*)>>
 {
 };
 
