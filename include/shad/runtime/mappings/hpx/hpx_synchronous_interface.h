@@ -56,7 +56,9 @@ struct SynchronousInterface<hpx_tag> {
     using action_type = invoke_executeAt_action<decltype(fn)>;
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
-    hpx::sync<action_type>(hpx::find_here(),
+    std::uint32_t loc_id = getLocalityId(loc);
+    hpx::naming::id_type id = hpx::naming::get_id_from_locality_id(loc_id);
+    hpx::sync<action_type>(id,
         reinterpret_cast<std::size_t>(fn),
         buffer_type(reinterpret_cast<const std::uint8_t*>(&args), sizeof(args),
                     buffer_type::reference));
@@ -76,7 +78,10 @@ struct SynchronousInterface<hpx_tag> {
     using action_type = invoke_executeAt_buffer_action;
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
-    hpx::sync<action_type>(hpx::find_here(),
+    std::uint32_t loc_id = getLocalityId(loc);
+    hpx::naming::id_type id = hpx::naming::get_id_from_locality_id(loc_id);
+
+    hpx::sync<action_type>(id,
         reinterpret_cast<std::size_t>(fn),
         buffer_type(argsBuffer.get(), bufferSize, buffer_type::reference));
   }
@@ -95,7 +100,10 @@ struct SynchronousInterface<hpx_tag> {
     using action_type = invoke_executeAtWithRetBuff_action<decltype(fn)>;
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
-    buffer_type result = hpx::sync<action_type>(hpx::find_here(),
+    std::uint32_t loc_id = getLocalityId(loc);
+    hpx::naming::id_type id = hpx::naming::get_id_from_locality_id(loc_id);
+
+    buffer_type result = hpx::sync<action_type>(id,
        reinterpret_cast<std::size_t>(fn),
        buffer_type(reinterpret_cast<std::uint8_t const*>(&args), sizeof(args),
                    buffer_type::reference),
@@ -121,7 +129,10 @@ struct SynchronousInterface<hpx_tag> {
     using action_type = invoke_executeAtWithRetBuff_buff_action;
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
-    buffer_type result = hpx::sync<action_type>(hpx::find_here(),
+    std::uint32_t loc_id = getLocalityId(loc);
+    hpx::naming::id_type id = hpx::naming::get_id_from_locality_id(loc_id);
+
+    buffer_type result = hpx::sync<action_type>(id,
         reinterpret_cast<std::size_t>(fn),
         buffer_type(argsBuffer.get(), bufferSize, buffer_type::reference),
         *resultSize);
@@ -141,7 +152,10 @@ struct SynchronousInterface<hpx_tag> {
     using action_type = invoke_executeAtWithRet_action<decltype(fn)>;
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
-    buffer_type res = hpx::sync<action_type>(hpx::find_here(),
+    std::uint32_t loc_id = getLocalityId(loc);
+    hpx::naming::id_type id = hpx::naming::get_id_from_locality_id(loc_id);
+
+    buffer_type res = hpx::sync<action_type>(id,
         reinterpret_cast<std::size_t>(fn),
         buffer_type(reinterpret_cast<const std::uint8_t*>(&args), sizeof(args),
                     buffer_type::reference));
@@ -163,7 +177,10 @@ struct SynchronousInterface<hpx_tag> {
     using action_type = invoke_executeAtWithRet_buff_action<decltype(fn)>;
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
-    buffer_type res = hpx::sync<action_type>(hpx::find_here(),
+    std::uint32_t loc_id = getLocalityId(loc);
+    hpx::naming::id_type id = hpx::naming::get_id_from_locality_id(loc_id);
+
+    buffer_type res = hpx::sync<action_type>(id,
         reinterpret_cast<std::size_t>(fn),
         buffer_type(argsBuffer.get(), bufferSize, buffer_type::reference));
 
@@ -181,13 +198,15 @@ struct SynchronousInterface<hpx_tag> {
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
     std::vector<hpx::id_type> localities = hpx::find_all_localities();
+    std::vector<hpx::lcos::future<void>> futures;
     for (hpx::naming::id_type const& loc : localities)
     {
-        hpx::sync<action_type>(loc,
-        reinterpret_cast<std::size_t>(fn),
-        buffer_type(reinterpret_cast<const std::uint8_t*>(&args), sizeof(args),
-                    buffer_type::reference));
+        futures.push_back(
+            hpx::async<action_type>(loc, reinterpret_cast<std::size_t>(fn),
+                buffer_type(reinterpret_cast<const std::uint8_t*>(&args),
+                            sizeof(args), buffer_type::reference)));
     }
+    hpx::wait_all(futures);
   }
 
   template <typename FunT>
@@ -203,12 +222,15 @@ struct SynchronousInterface<hpx_tag> {
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
     std::vector<hpx::id_type> localities = hpx::find_all_localities();
+    std::vector<hpx::lcos::future<void>> futures;
     for (hpx::naming::id_type const& loc : localities)
     {
-        hpx::sync<action_type>(loc,
-        reinterpret_cast<std::size_t>(fn),
-        buffer_type(argsBuffer.get(), bufferSize, buffer_type::reference));
+        futures.push_back(
+            hpx::async<action_type>(loc, reinterpret_cast<std::size_t>(fn),
+                buffer_type(argsBuffer.get(), bufferSize,
+                            buffer_type::reference)));
     }
+    hpx::wait_all(futures);
   }
 
   template <typename FunT, typename InArgsT>
@@ -226,13 +248,12 @@ struct SynchronousInterface<hpx_tag> {
     //hpx::for_loop(hpx::execution::par, 0, numIters,
     //              [&](std::size_t i) {fn(args, i);}); // local case
 
-    hpx::for_loop(hpx::execution::par, 0, numIters,
-                  [&](std::size_t i) {
-                      hpx::sync<action_type>(hpx::find_here(),
-                          reinterpret_cast<std::size_t>(fn),
-                          buffer_type(reinterpret_cast<const std::uint8_t*>(
-                              &args), sizeof(args), buffer_type::reference), i);
-                  });
+    std::uint32_t loc_id = getLocalityId(loc);
+    hpx::naming::id_type id = hpx::naming::get_id_from_locality_id(loc_id);
+
+    hpx::sync<action_type>(id, reinterpret_cast<std::size_t>(fn),
+        buffer_type(reinterpret_cast<const std::uint8_t*>(&args), sizeof(args),
+            buffer_type::reference), numIters);
   }
 
   template <typename FunT>
@@ -252,13 +273,12 @@ struct SynchronousInterface<hpx_tag> {
     using action_type = invoke_forEachAt_buffer_action;
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
-    hpx::for_loop(hpx::execution::par, 0, numIters,
-                  [&](std::size_t i) {
-                      hpx::sync<action_type>(hpx::find_here(),
-                          reinterpret_cast<std::size_t>(fn),
-                          buffer_type(argsBuffer.get(), bufferSize,
-                                      buffer_type::reference), i);
-                  });
+    std::uint32_t loc_id = getLocalityId(loc);
+    hpx::naming::id_type id = hpx::naming::get_id_from_locality_id(loc_id);
+
+    hpx::sync<action_type>(id, reinterpret_cast<std::size_t>(fn),
+        buffer_type(argsBuffer.get(), bufferSize, buffer_type::reference),
+        numIters);
 
   }
 
@@ -276,16 +296,15 @@ struct SynchronousInterface<hpx_tag> {
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
     std::vector<hpx::id_type> localities = hpx::find_all_localities();
+    std::vector<hpx::lcos::future<void>> futures;
     for (hpx::naming::id_type const& loc : localities)
     {
-        hpx::for_loop(hpx::execution::par, 0, numIters,
-                  [&](std::size_t i) {
-                      hpx::sync<action_type>(loc,
-                          reinterpret_cast<std::size_t>(fn),
-                          buffer_type(reinterpret_cast<const std::uint8_t*>(
-                              &args), sizeof(args), buffer_type::reference), i);
-                  });
+        futures.push_back(
+            hpx::async<action_type>(loc, reinterpret_cast<std::size_t>(fn),
+                buffer_type(reinterpret_cast<const std::uint8_t*>(&args),
+                    sizeof(args), buffer_type::reference), numIters));
     }
+    hpx::wait_all(futures);
   }
 
   template <typename FunT>
@@ -304,15 +323,14 @@ struct SynchronousInterface<hpx_tag> {
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
     std::vector<hpx::id_type> localities = hpx::find_all_localities();
+    std::vector<hpx::lcos::future<void>> futures;
     for (hpx::naming::id_type const& loc : localities){
-       hpx::for_loop(hpx::execution::par, 0, numIters,
-                  [&](std::size_t i) {
-                      hpx::sync<action_type>(loc,
-                          reinterpret_cast<std::size_t>(fn),
-                          buffer_type(argsBuffer.get(), bufferSize,
-                                      buffer_type::reference), i);
-                  });
+      futures.push_back(
+          hpx::async<action_type>(loc, reinterpret_cast<std::size_t>(fn),
+              buffer_type(argsBuffer.get(), bufferSize, buffer_type::reference),
+                  numIters));
     }
+    hpx::wait_all(futures);
   }
 
   template <typename T>
