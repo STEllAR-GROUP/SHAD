@@ -169,25 +169,31 @@ namespace detail {
     {
         static void call(std::size_t f,
             hpx::serialization::serialize_buffer<std::uint8_t> args,
-            std::size_t i)
+            std::size_t numIters)
         {
-            return reinterpret_cast<void (*)(T, std::size_t)>(f)(
-                std::move(*reinterpret_cast<std::decay_t<T>*>(args.data())), i);
+            hpx::for_loop(hpx::execution::par, 0, numIters,
+                  [&](std::size_t i) {
+                      reinterpret_cast<void (*)(T, std::size_t)>(f)(
+                            std::move(*reinterpret_cast<std::decay_t<T>*>(
+                                args.data())), i);
+                  });
+            
         }
     };
 
-        struct invoke_forEachAt_buffer
+    struct invoke_forEachAt_buffer
     {
         static void call(std::size_t f,
             hpx::serialization::serialize_buffer<std::uint8_t> args,
-            std::size_t i)
+            std::size_t numIters)
         {
-            reinterpret_cast<void (*)(const uint8_t *, const uint32_t,
-                                      std::size_t)>(f)(
-                args.data(), args.size(), i);
+            hpx::for_loop(hpx::execution::par, 0, numIters,
+                  [&](std::size_t i) {
+                      reinterpret_cast<void (*)(const uint8_t *, const uint32_t,
+                          std::size_t)>(f)(args.data(), args.size(), i);
+                  });
         }
     };
-
 }    // namespace detail
 // action definition exposing invoke_function_ptr<> that binds a global
 // function (Note: this assumes global function addresses are the same on
