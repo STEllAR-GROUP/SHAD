@@ -140,6 +140,28 @@ namespace detail {
         }
     };
 
+    template <typename F>
+    struct invoke_executeAtWithRet_buff;
+    template <typename R>
+    struct invoke_executeAtWithRet_buff<void (*)(const uint8_t *,
+                                                 const uint32_t, R*)>
+    {
+        static hpx::serialization::serialize_buffer<std::uint8_t> call(
+          std::size_t f,
+          hpx::serialization::serialize_buffer<std::uint8_t> args)
+        {
+            std::uint32_t size = sizeof(R);
+
+            hpx::serialization::serialize_buffer<std::uint8_t> result(size);
+
+            reinterpret_cast<void (*)(const uint8_t *, const uint32_t, R*,
+                std::uint32_t*)>(f)(args.data(), args.size(),
+                reinterpret_cast<R*>(result.data()), &size);
+
+            return result;
+        }
+    };
+
 }    // namespace detail
 // action definition exposing invoke_function_ptr<> that binds a global
 // function (Note: this assumes global function addresses are the same on
@@ -201,6 +223,21 @@ struct invoke_executeAtWithRet_action<void (*)(T, R*)>
         &detail::invoke_executeAtWithRet<
             void (*)(T, R*)>::call,
         invoke_executeAtWithRet_action<void (*)(T, R*)>>
+{
+};
+
+template <typename F>
+struct invoke_executeAtWithRet_buff_action;
+template <typename R>
+struct invoke_executeAtWithRet_buff_action<void (*)(const uint8_t *,
+                                                    const uint32_t, R*)>
+  : ::hpx::actions::action<
+        hpx::serialization::serialize_buffer<std::uint8_t>(*)(std::size_t,
+            hpx::serialization::serialize_buffer<std::uint8_t>),
+        &detail::invoke_executeAtWithRet_buff<
+            void (*)(const uint8_t *, const uint32_t, R*)>::call,
+        invoke_executeAtWithRet_buff_action<void (*)(const uint8_t *,
+            const uint32_t, R*)>>
 {
 };
 
