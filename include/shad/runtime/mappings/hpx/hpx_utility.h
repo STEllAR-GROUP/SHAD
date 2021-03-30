@@ -61,19 +61,19 @@ namespace detail {
     ///////////////////////////////////////////////////////////////////////
     // simple utility action which invoke an arbitrary global function
     template <typename F>
-    struct invoke_function_ptr;
-    template <typename R, typename T>
-    struct invoke_function_ptr<R (*)(T)>
+    struct invoke_executeAt;
+    template <typename T>
+    struct invoke_executeAt<void (*)(T)>
     {
-        static R call(std::size_t f,
+        static void call(std::size_t f,
             hpx::serialization::serialize_buffer<std::uint8_t> args)
         {
-            return reinterpret_cast<R (*)(T)>(f)(
+            return reinterpret_cast<void (*)(T)>(f)(
                 std::move(*reinterpret_cast<std::decay_t<T>*>(args.data())));
         }
     };
 
-    struct invoke_function_buffer
+    struct invoke_executeAt_buffer
     {
         static void call(std::size_t f,
             hpx::serialization::serialize_buffer<std::uint8_t> args)
@@ -83,9 +83,9 @@ namespace detail {
         }
     };
     template <typename F>
-    struct invoke_function_with_ret;
+    struct invoke_executeAtWithRetBuff;
     template <typename T>
-    struct invoke_function_with_ret<void (*)(T, std::uint8_t*, std::uint32_t*)>
+    struct invoke_executeAtWithRetBuff<void (*)(T, std::uint8_t*, std::uint32_t*)>
     {
         static hpx::serialization::serialize_buffer<std::uint8_t> call(
           std::size_t f,
@@ -102,7 +102,7 @@ namespace detail {
         }
     };
 
-    struct invoke_function_with_ret_buff
+    struct invoke_executeAtWithRetBuff_buff
     {
         static hpx::serialization::serialize_buffer<std::uint8_t> call(
           std::size_t f,
@@ -120,9 +120,9 @@ namespace detail {
     };
 
     template <typename F>
-    struct invoke_function_with_ret_explicit;
+    struct invoke_executeAtWithRet;
     template <typename R, typename T>
-    struct invoke_function_with_ret_explicit<void (*)(T, R*)>
+    struct invoke_executeAtWithRet<void (*)(T, R*)>
     {
         static hpx::serialization::serialize_buffer<std::uint8_t> call(
           std::size_t f,
@@ -146,61 +146,61 @@ namespace detail {
 // all localities. This also assumes that all argument types are bitwise
 // copyable
 template <typename F>
-struct invoke_function_action;
-template <typename R, typename T>
-struct invoke_function_action<R (*)(T)>
-  : ::hpx::actions::action<
-        R (*)(std::size_t,
-            hpx::serialization::serialize_buffer<std::uint8_t>),
-        &detail::invoke_function_ptr<R (*)(T)>::call,
-        invoke_function_action<R (*)(T)>>
-{
-};
-
-struct invoke_function_buffer_action
+struct invoke_executeAt_action;
+template <typename T>
+struct invoke_executeAt_action<void (*)(T)>
   : ::hpx::actions::action<
         void (*)(std::size_t,
             hpx::serialization::serialize_buffer<std::uint8_t>),
-        &detail::invoke_function_buffer::call,
-        invoke_function_buffer_action>
+        &detail::invoke_executeAt<void (*)(T)>::call,
+        invoke_executeAt_action<void (*)(T)>>
+{
+};
+
+struct invoke_executeAt_buffer_action
+  : ::hpx::actions::action<
+        void (*)(std::size_t,
+            hpx::serialization::serialize_buffer<std::uint8_t>),
+        &detail::invoke_executeAt_buffer::call,
+        invoke_executeAt_buffer_action>
 {
 };
 
 template <typename F>
-struct invoke_function_with_ret_action;
+struct invoke_executeAtWithRetBuff_action;
 template <typename T>
-struct invoke_function_with_ret_action<void (*)(T, std::uint8_t*,
+struct invoke_executeAtWithRetBuff_action<void (*)(T, std::uint8_t*,
                                                 std::uint32_t*)>
   : ::hpx::actions::action<
         hpx::serialization::serialize_buffer<std::uint8_t> (*)(std::size_t,
             hpx::serialization::serialize_buffer<std::uint8_t>, std::uint32_t),
-        &detail::invoke_function_with_ret<
+        &detail::invoke_executeAtWithRetBuff<
             void (*)(T, std::uint8_t*, std::uint32_t*)>::call,
-        invoke_function_with_ret_action<void (*)(T, std::uint8_t*,
+        invoke_executeAtWithRetBuff_action<void (*)(T, std::uint8_t*,
                                                  std::uint32_t*)>>
 {
 };
 
 
-struct invoke_function_with_ret_buff_action
+struct invoke_executeAtWithRetBuff_buff_action
   : ::hpx::actions::action<
         hpx::serialization::serialize_buffer<std::uint8_t> (*)(std::size_t,
             hpx::serialization::serialize_buffer<std::uint8_t>, std::uint32_t),
-        &detail::invoke_function_with_ret_buff::call,
-        invoke_function_with_ret_buff_action>
+        &detail::invoke_executeAtWithRetBuff_buff::call,
+        invoke_executeAtWithRetBuff_buff_action>
 {
 };
 
 template <typename F>
-struct invoke_function_with_ret_explicit_action;
+struct invoke_executeAtWithRet_action;
 template <typename R, typename T>
-struct invoke_function_with_ret_explicit_action<void (*)(T, R*)>
+struct invoke_executeAtWithRet_action<void (*)(T, R*)>
   : ::hpx::actions::action<
         hpx::serialization::serialize_buffer<std::uint8_t>(*)(std::size_t,
             hpx::serialization::serialize_buffer<std::uint8_t>),
-        &detail::invoke_function_with_ret_explicit<
+        &detail::invoke_executeAtWithRet<
             void (*)(T, R*)>::call,
-        invoke_function_with_ret_explicit_action<void (*)(T, R*)>>
+        invoke_executeAtWithRet_action<void (*)(T, R*)>>
 {
 };
 
