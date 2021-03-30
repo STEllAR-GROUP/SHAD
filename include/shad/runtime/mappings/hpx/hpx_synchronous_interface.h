@@ -220,8 +220,19 @@ struct SynchronousInterface<hpx_tag> {
 
     checkLocality(loc);
 
+    using action_type = invoke_forEachAt_action<decltype(fn)>;
+    using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
+
+    //hpx::for_loop(hpx::execution::par, 0, numIters,
+    //              [&](std::size_t i) {fn(args, i);}); // local case
+
     hpx::for_loop(hpx::execution::par, 0, numIters,
-                  [&](std::size_t i) {fn(args, i);}); // local case
+                  [&](std::size_t i) {
+                      hpx::sync<action_type>(hpx::find_here(),
+                          reinterpret_cast<std::size_t>(fn),
+                          buffer_type(reinterpret_cast<const std::uint8_t*>(
+                              &args), sizeof(args), buffer_type::reference), i);
+                  });
   }
 
   template <typename FunT>
@@ -234,8 +245,20 @@ struct SynchronousInterface<hpx_tag> {
 
     checkLocality(loc);
 
+    // local case
+    //hpx::for_loop(hpx::execution::par, 0, numIters,
+    //              [&](std::size_t i) {fn(argsBuffer.get(), bufferSize, i);});
+
+    using action_type = invoke_forEachAt_buffer_action;
+    using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
+
     hpx::for_loop(hpx::execution::par, 0, numIters,
-                  [&](std::size_t i) {fn(argsBuffer.get(), bufferSize, i);});
+                  [&](std::size_t i) {
+                      hpx::sync<action_type>(hpx::find_here(),
+                          reinterpret_cast<std::size_t>(fn),
+                          buffer_type(argsBuffer.get(), bufferSize,
+                                      buffer_type::reference), i);
+                  });
 
   }
 
@@ -246,8 +269,23 @@ struct SynchronousInterface<hpx_tag> {
 
     FunctionTy fn = std::forward<decltype(function)>(function);
 
-    hpx::for_loop(hpx::execution::par, 0, numIters,
-                  [&](std::size_t i) {fn(args, i);});
+    //hpx::for_loop(hpx::execution::par, 0, numIters,
+    //              [&](std::size_t i) {fn(args, i);}); // local case
+    
+    using action_type = invoke_forEachAt_action<decltype(fn)>;
+    using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
+
+    std::vector<hpx::id_type> localities = hpx::find_all_localities();
+    for (hpx::naming::id_type const& loc : localities)
+    {
+        hpx::for_loop(hpx::execution::par, 0, numIters,
+                  [&](std::size_t i) {
+                      hpx::sync<action_type>(loc,
+                          reinterpret_cast<std::size_t>(fn),
+                          buffer_type(reinterpret_cast<const std::uint8_t*>(
+                              &args), sizeof(args), buffer_type::reference), i);
+                  });
+    }
   }
 
   template <typename FunT>
@@ -258,8 +296,23 @@ struct SynchronousInterface<hpx_tag> {
 
     FunctionTy fn = std::forward<decltype(function)>(function);
 
-    hpx::for_loop(hpx::execution::par, 0, numIters,
-                  [&](std::size_t i) {fn(argsBuffer.get(), bufferSize, i);});
+    // local case
+    //hpx::for_loop(hpx::execution::par, 0, numIters,
+    //              [&](std::size_t i) {fn(argsBuffer.get(), bufferSize, i);});
+
+    using action_type = invoke_forEachAt_buffer_action;
+    using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
+
+    std::vector<hpx::id_type> localities = hpx::find_all_localities();
+    for (hpx::naming::id_type const& loc : localities){
+       hpx::for_loop(hpx::execution::par, 0, numIters,
+                  [&](std::size_t i) {
+                      hpx::sync<action_type>(loc,
+                          reinterpret_cast<std::size_t>(fn),
+                          buffer_type(argsBuffer.get(), bufferSize,
+                                      buffer_type::reference), i);
+                  });
+    }
   }
 
   template <typename T>

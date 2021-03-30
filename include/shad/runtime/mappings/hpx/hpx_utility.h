@@ -162,6 +162,32 @@ namespace detail {
         }
     };
 
+    template <typename F>
+    struct invoke_forEachAt;
+    template <typename T>
+    struct invoke_forEachAt<void (*)(T, std::size_t)>
+    {
+        static void call(std::size_t f,
+            hpx::serialization::serialize_buffer<std::uint8_t> args,
+            std::size_t i)
+        {
+            return reinterpret_cast<void (*)(T, std::size_t)>(f)(
+                std::move(*reinterpret_cast<std::decay_t<T>*>(args.data())), i);
+        }
+    };
+
+        struct invoke_forEachAt_buffer
+    {
+        static void call(std::size_t f,
+            hpx::serialization::serialize_buffer<std::uint8_t> args,
+            std::size_t i)
+        {
+            reinterpret_cast<void (*)(const uint8_t *, const uint32_t,
+                                      std::size_t)>(f)(
+                args.data(), args.size(), i);
+        }
+    };
+
 }    // namespace detail
 // action definition exposing invoke_function_ptr<> that binds a global
 // function (Note: this assumes global function addresses are the same on
@@ -238,6 +264,27 @@ struct invoke_executeAtWithRet_buff_action<void (*)(const uint8_t *,
             void (*)(const uint8_t *, const uint32_t, R*)>::call,
         invoke_executeAtWithRet_buff_action<void (*)(const uint8_t *,
             const uint32_t, R*)>>
+{
+};
+
+template <typename F>
+struct invoke_forEachAt_action;
+template <typename T>
+struct invoke_forEachAt_action<void (*)(T, std::size_t)>
+  : ::hpx::actions::action<
+        void (*)(std::size_t,
+            hpx::serialization::serialize_buffer<std::uint8_t>, std::size_t),
+        &detail::invoke_forEachAt<void (*)(T, std::size_t)>::call,
+        invoke_forEachAt_action<void (*)(T, std::size_t)>>
+{
+};
+
+struct invoke_forEachAt_buffer_action
+  : ::hpx::actions::action<
+        void (*)(std::size_t,
+            hpx::serialization::serialize_buffer<std::uint8_t>, std::size_t),
+        &detail::invoke_forEachAt_buffer::call,
+        invoke_forEachAt_buffer_action>
 {
 };
 
