@@ -86,6 +86,7 @@ TEST_F(ForEachTest, ForEachOnAllWithStruct) {
         ASSERT_EQ(Counter, 11 * shad::rt::impl::getConcurrency());
       },
       false);
+
 }
 
 TEST_F(ForEachTest, ForEachOnAllWithBuffer) {
