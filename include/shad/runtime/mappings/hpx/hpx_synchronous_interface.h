@@ -296,13 +296,14 @@ struct SynchronousInterface<hpx_tag> {
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
     std::vector<hpx::id_type> localities = hpx::find_all_localities();
+    std::size_t Iters = numIters / hpx::get_num_localities(hpx::launch::sync);
     std::vector<hpx::lcos::future<void>> futures;
     for (hpx::naming::id_type const& loc : localities)
     {
         futures.push_back(
             hpx::async<action_type>(loc, reinterpret_cast<std::size_t>(fn),
                 buffer_type(reinterpret_cast<const std::uint8_t*>(&args),
-                    sizeof(args), buffer_type::reference), numIters));
+                    sizeof(args), buffer_type::reference), Iters));
     }
     hpx::wait_all(futures);
   }
@@ -323,12 +324,13 @@ struct SynchronousInterface<hpx_tag> {
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
     std::vector<hpx::id_type> localities = hpx::find_all_localities();
+    std::size_t Iters = numIters / hpx::get_num_localities(hpx::launch::sync);
     std::vector<hpx::lcos::future<void>> futures;
     for (hpx::naming::id_type const& loc : localities){
       futures.push_back(
           hpx::async<action_type>(loc, reinterpret_cast<std::size_t>(fn),
               buffer_type(argsBuffer.get(), bufferSize, buffer_type::reference),
-                  numIters));
+                  Iters));
     }
     hpx::wait_all(futures);
   }
