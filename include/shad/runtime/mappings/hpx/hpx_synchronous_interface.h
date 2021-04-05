@@ -358,14 +358,37 @@ struct SynchronousInterface<hpx_tag> {
   }
 
   template <typename T>
-  static void dma(const Locality &, const T* remoteAddress,
+  static void dma(const Locality & destLoc, const T* remoteAddress,
                   const T* localData, const size_t numElements) {
-    memcpy((u_int8_t*)remoteAddress,
-           (u_int8_t*)(localData), numElements*sizeof(T));
+    //memcpy((u_int8_t*)remoteAddress,
+    //       (u_int8_t*)(localData), numElements*sizeof(T)); // local case
+    
+    //memcpy((std::uint8_t*)remoteAddress,
+    //       (std::uint8_t*)(localData), numElements*sizeof(T)); // local case
+
+    //memcpy(const_cast<uint8_t*>(reinterpret_cast<const uint8_t *>(remoteAddress)),
+    //  const_cast<uint8_t*>(reinterpret_cast<const uint8_t *>(localData)),
+    //  numElements*sizeof(T)); // local case
+
+    //checkLocality(destLoc);
+
+    using action_type = invoke_dma_put_action;
+    using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
+
+    std::uint32_t loc_id = getLocalityId(destLoc);
+    hpx::naming::id_type id = hpx::naming::get_id_from_locality_id(loc_id);
+
+    buffer_type result = hpx::sync<action_type>(id,
+        buffer_type(const_cast<uint8_t*>(reinterpret_cast<const uint8_t *>(localData)),
+            numElements*sizeof(T), buffer_type::reference));
+
+    std::memcpy(const_cast<uint8_t*>(reinterpret_cast<const uint8_t *>(remoteAddress)),
+        result.data(), result.size());
+
   }
 
   template <typename T>
-  static void dma(const T* localAddress, const Locality &,
+  static void dma(const T* localAddress, const Locality & srcLoc,
                   const T* remoteData, const size_t numElements) {
     memcpy((u_int8_t*)localAddress, (u_int8_t*)(remoteData),
            numElements*sizeof(T));
