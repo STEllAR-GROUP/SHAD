@@ -194,7 +194,25 @@ namespace detail {
                   });
         }
     };
+
+
+    struct invoke_dma_put
+    {
+        static hpx::serialization::serialize_buffer<std::uint8_t> call(
+            hpx::serialization::serialize_buffer<std::uint8_t> args)
+        {
+            //hpx::serialization::serialize_buffer<std::uint8_t> result(
+            //    args.data(), args.size(),
+            //    hpx::serialization::serialize_buffer<std::uint8_t>::reference);
+//
+            //return result;
+
+            return args;
+
+        }
+    };
 }    // namespace detail
+
 // action definition exposing invoke_function_ptr<> that binds a global
 // function (Note: this assumes global function addresses are the same on
 // all localities. This also assumes that all argument types are bitwise
@@ -291,6 +309,15 @@ struct invoke_forEachAt_buffer_action
             hpx::serialization::serialize_buffer<std::uint8_t>, std::size_t),
         &detail::invoke_forEachAt_buffer::call,
         invoke_forEachAt_buffer_action>
+{
+};
+
+struct invoke_dma_put_action
+  : ::hpx::actions::action<
+        hpx::serialization::serialize_buffer<std::uint8_t> (*)(
+            hpx::serialization::serialize_buffer<std::uint8_t>),
+        &detail::invoke_dma_put::call,
+        invoke_dma_put_action>
 {
 };
 
