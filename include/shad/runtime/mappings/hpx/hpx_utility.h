@@ -196,19 +196,15 @@ namespace detail {
     };
 
 
+    template<typename T>
     struct invoke_dma_put
     {
-        static hpx::serialization::serialize_buffer<std::uint8_t> call(
-            hpx::serialization::serialize_buffer<std::uint8_t> args)
+        static void call(
+            hpx::serialization::serialize_buffer<std::uint8_t> args,
+            std::size_t remoteAddress)
         {
-            //hpx::serialization::serialize_buffer<std::uint8_t> result(
-            //    args.data(), args.size(),
-            //    hpx::serialization::serialize_buffer<std::uint8_t>::reference);
-//
-            //return result;
-
-            return args;
-
+            std::memcpy(reinterpret_cast<T*>(remoteAddress),
+                args.data(), args.size());
         }
     };
 }    // namespace detail
@@ -312,12 +308,13 @@ struct invoke_forEachAt_buffer_action
 {
 };
 
+template<typename T>
 struct invoke_dma_put_action
   : ::hpx::actions::action<
-        hpx::serialization::serialize_buffer<std::uint8_t> (*)(
-            hpx::serialization::serialize_buffer<std::uint8_t>),
-        &detail::invoke_dma_put::call,
-        invoke_dma_put_action>
+        void (*)(
+            hpx::serialization::serialize_buffer<std::uint8_t>, std::size_t),
+        &detail::invoke_dma_put<T>::call,
+        invoke_dma_put_action<T>>
 {
 };
 
