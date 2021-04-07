@@ -207,6 +207,18 @@ namespace detail {
                 args.data(), args.size());
         }
     };
+
+    struct invoke_dma_get
+    {
+        static hpx::serialization::serialize_buffer<std::uint8_t> call(
+            std::size_t remoteData, std::size_t numBytes)
+        {
+            hpx::serialization::serialize_buffer<std::uint8_t> result(
+                reinterpret_cast<const uint8_t *>(remoteData), numBytes,
+                hpx::serialization::serialize_buffer<std::uint8_t>::reference);
+            return result;
+        }
+    };
 }    // namespace detail
 
 // action definition exposing invoke_function_ptr<> that binds a global
@@ -315,6 +327,15 @@ struct invoke_dma_put_action
             hpx::serialization::serialize_buffer<std::uint8_t>, std::size_t),
         &detail::invoke_dma_put<T>::call,
         invoke_dma_put_action<T>>
+{
+};
+
+struct invoke_dma_get_action
+  : ::hpx::actions::action<
+        hpx::serialization::serialize_buffer<std::uint8_t> (*)(
+            std::size_t, std::size_t),
+        &detail::invoke_dma_get::call,
+        invoke_dma_get_action>
 {
 };
 
