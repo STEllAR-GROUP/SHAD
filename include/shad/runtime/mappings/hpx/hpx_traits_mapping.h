@@ -31,8 +31,8 @@
 #include <string>
 
 #include "hpx/hpx.hpp"
-#include <hpx/include/task_group.hpp>
 
+#include "shad/runtime/mappings/hpx/hpx_task_group.h"
 #include "shad/runtime/mapping_traits.h"
 
 namespace shad {
@@ -44,14 +44,14 @@ struct hpx_tag {};
 
 template <>
 struct HandleTrait<hpx_tag> {
-  using HandleTy = std::shared_ptr<hpx::task_group<>>;
-  using ParameterTy = std::shared_ptr<hpx::task_group<>> &;
-  using ConstParameterTy = const std::shared_ptr<hpx::task_group<>> &;
+  using HandleTy = std::shared_ptr<task_group<>>;
+  using ParameterTy = std::shared_ptr<task_group<>> &;
+  using ConstParameterTy = const std::shared_ptr<task_group<>> &;
 
   static void Init(ParameterTy H, ConstParameterTy V) {}
 
   static HandleTy NullValue() {
-    return std::shared_ptr<hpx::task_group<>>(nullptr);
+    return std::shared_ptr<task_group<>>(nullptr);
   }
 
   static bool Equal(ConstParameterTy lhs, ConstParameterTy rhs) {
@@ -65,7 +65,7 @@ struct HandleTrait<hpx_tag> {
   }
 
   static HandleTy CreateNewHandle() {
-    return std::shared_ptr<hpx::task_group<>>(new hpx::task_group<>());
+    return std::shared_ptr<task_group<>>(new task_group<>());
   }
 
   static void WaitFor(ParameterTy H) {
