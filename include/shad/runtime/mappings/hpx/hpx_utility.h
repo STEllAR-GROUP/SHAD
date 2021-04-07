@@ -31,10 +31,8 @@
 #include <system_error>
 #include <utility>
 
-# include <iostream>
-
 #include "hpx/hpx.hpp"
-#include <hpx/hpx_init.hpp>
+#include "hpx/hpx_init.hpp"
 #include "hpx/serialization/serialize_buffer.hpp"
 
 #include "shad/runtime/locality.h"
