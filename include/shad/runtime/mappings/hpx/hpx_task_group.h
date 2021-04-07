@@ -50,146 +50,124 @@
 namespace shad {
 namespace rt {
 namespace impl {
-namespace detail {
+
+template <typename ExPolicy = hpx::execution::parallel_policy>
+class task_group
+{
+private:
     /// \cond NOINTERNAL
-    ///////////////////////////////////////////////////////////////////////
-    inline void handle_task_group_exceptions(
-        hpx::parallel::exception_list& errors)
+    typedef hpx::lcos::local::spinlock mutex_type;
+
+    void wait_for_completion(std::false_type)
     {
-        try
+        when();
+    }
+
+    void wait_for_completion(std::true_type)
+    {
+        when().wait();
+    }
+
+    void wait_for_completion()
+    {
+        typedef typename hpx::parallel::util::detail::algorithm_result
+            <ExPolicy>::type result_type;
+        typedef hpx::traits::is_future<result_type> is_fut;
+        wait_for_completion(is_fut());
+    }
+
+
+    task_group(task_group const&) = delete;
+    task_group& operator=(task_group const&) = delete;
+
+    task_group* operator&() const = delete;
+
+    static void on_ready(std::vector<hpx::future<void>>&& results,
+        hpx::parallel::exception_list&& errors)
+    {
+        for (hpx::future<void>& f : results)
         {
-            std::rethrow_exception(std::current_exception());
+            if (f.has_exception())
+                errors.add(f.get_exception_ptr());
         }
-        catch (hpx::parallel::exception_list const& el)
+        if (errors.size() != 0)
+            throw std::forward<hpx::parallel::exception_list>(errors);
+    }
+
+     // return future representing the execution of all tasks
+     typename hpx::parallel::util::detail::algorithm_result<ExPolicy>::type
+         when(bool throw_on_error = false)
+     {
+         std::vector<hpx::future<void>> tasks;
+         hpx::parallel::exception_list errors;
+
         {
-            for (std::exception_ptr const& e : el)
-                errors.add(e);
+            std::lock_guard<mutex_type> l(mtx_);
+            std::swap(tasks_, tasks);
+            std::swap(errors_, errors);
         }
-        catch (...)
-        {
-            errors.add(std::current_exception());
-        }
+
+        typedef hpx::parallel::util::detail::algorithm_result
+            <ExPolicy> result;
+
+        if (tasks.empty() && errors.size() == 0)
+            return result::get();
+
+        if (!throw_on_error)
+            return result::get(hpx::when_all(tasks));
+
+        return result::get(
+            hpx::dataflow(hpx::util::one_shot(hpx::util::bind_back(
+                              &task_group::on_ready, std::move(errors))),
+                std::move(tasks)));
     }
     /// \endcond
-}    // namespace detail
 
-    template <typename ExPolicy = hpx::execution::parallel_policy>
-    class task_group
+public:
+    task_group(ExPolicy const& policy = ExPolicy())
     {
-    private:
-        /// \cond NOINTERNAL
-        typedef hpx::lcos::local::spinlock mutex_type;
+    }
 
-        void wait_for_completion(std::false_type)
-        {
-            when();
-        }
+    ~task_group()
+    {
+        wait_for_completion();
+    }
 
-        void wait_for_completion(std::true_type)
-        {
-            when().wait();
-        }
+    template <typename F, typename... Ts>
+    void run(F&& f, Ts&&... ts)
+    {
 
-        void wait_for_completion()
-        {
-            typedef typename hpx::parallel::util::detail::algorithm_result
-                <ExPolicy>::type result_type;
-            typedef hpx::traits::is_future<result_type> is_fut;
-            wait_for_completion(is_fut());
-        }
+        hpx::parallel::execution::parallel_executor exec;
+        hpx::future<void> result = exec.async_execute(std::forward<F>(f),
+                std::forward<Ts>(ts)...);
 
+        std::lock_guard<mutex_type> l(mtx_);
+        tasks_.push_back(std::move(result));
+    }
 
-        task_group(task_group const&) = delete;
-        task_group& operator=(task_group const&) = delete;
+    template <typename Executor, typename F, typename... Ts>
+    void run(F&& f, Ts&&... ts)
+    {
+        hpx::parallel::execution::parallel_executor exec;
+        hpx::future<void> result = exec.async_execute(
+            std::forward<F>(f), std::forward<Ts>(ts)...);
 
-        task_group* operator&() const = delete;
+        std::lock_guard<mutex_type> l(mtx_);
+        tasks_.push_back(std::move(result));
+    }
 
-        static void on_ready(std::vector<hpx::future<void>>&& results,
-            hpx::parallel::exception_list&& errors)
-        {
-            for (hpx::future<void>& f : results)
-            {
-                if (f.has_exception())
-                    errors.add(f.get_exception_ptr());
-            }
-            if (errors.size() != 0)
-                throw std::forward<hpx::parallel::exception_list>(errors);
-        }
+    void wait()
+    {
 
-        // return future representing the execution of all tasks
-        typename hpx::parallel::util::detail::algorithm_result<ExPolicy>::type
-            when(bool throw_on_error = false)
-        {
-            std::vector<hpx::future<void>> tasks;
-            hpx::parallel::exception_list errors;
-
-            {
-                std::lock_guard<mutex_type> l(mtx_);
-                std::swap(tasks_, tasks);
-                std::swap(errors_, errors);
-            }
-
-            typedef hpx::parallel::util::detail::algorithm_result
-                <ExPolicy> result;
-
-            if (tasks.empty() && errors.size() == 0)
-                return result::get();
-
-            if (!throw_on_error)
-                return result::get(hpx::when_all(tasks));
-
-            return result::get(
-                hpx::dataflow(hpx::util::one_shot(hpx::util::bind_back(
-                                  &task_group::on_ready, std::move(errors))),
-                    std::move(tasks)));
-        }
-        /// \endcond
-
-    public:
-        task_group(ExPolicy const& policy = ExPolicy())
-        {
-        }
-
-        ~task_group()
-        {
-            wait_for_completion();
-        }
-
-        template <typename F, typename... Ts>
-        void run(F&& f, Ts&&... ts)
-        {
-
-            hpx::parallel::execution::parallel_executor exec;
-            hpx::future<void> result = exec.async_execute(std::forward<F>(f),
-                    std::forward<Ts>(ts)...);
-
-            std::lock_guard<mutex_type> l(mtx_);
-            tasks_.push_back(std::move(result));
-        }
-
-        template <typename Executor, typename F, typename... Ts>
-        void run(F&& f, Ts&&... ts)
-        {
-            hpx::parallel::execution::parallel_executor exec;
-            hpx::future<void> result = exec.async_execute(
-                std::forward<F>(f), std::forward<Ts>(ts)...);
-
-            std::lock_guard<mutex_type> l(mtx_);
-            tasks_.push_back(std::move(result));
-        }
-
-        void wait()
-        {
-
-            wait_for_completion();
-        }
+        wait_for_completion();
+    }
 
 
-    private:
-        mutable mutex_type mtx_;
-        std::vector<hpx::future<void>> tasks_;
-        hpx::parallel::exception_list errors_;
-    };
+private:
+    mutable mutex_type mtx_;
+    std::vector<hpx::future<void>> tasks_;
+    hpx::parallel::exception_list errors_;
+};
 
 }  // namespace impl
 }  // namespace rt
@@ -197,10 +175,12 @@ namespace detail {
 
 /// \cond NOINTERNAL
 namespace std {
-    template <typename ExPolicy>
-    shad::rt::impl::task_group<ExPolicy>* addressof(
-        shad::rt::impl::task_group<ExPolicy>&) = delete;
-}
+
+template <typename ExPolicy>
+shad::rt::impl::task_group<ExPolicy>* addressof(
+    shad::rt::impl::task_group<ExPolicy>&) = delete;
+
+} // namespace std
 /// \endcond
 
 #endif  // INCLUDE_SHAD_RUNTIME_MAPPINGS_HPX_HPX_TASK_GROUP_H_

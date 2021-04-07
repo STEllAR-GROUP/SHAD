@@ -34,6 +34,7 @@
 #include "shad/runtime/handle.h"
 #include "shad/runtime/locality.h"
 #include "shad/runtime/mapping_traits.h"
+#include "shad/runtime/mappings/hpx/hpx_task_group.h"
 #include "shad/runtime/mappings/hpx/hpx_traits_mapping.h"
 #include "shad/runtime/mappings/hpx/hpx_utility.h"
 
@@ -53,6 +54,7 @@ struct AsynchronousInterface<hpx_tag> {
 
     checkLocality(loc);
 
+    // local case
     handle.id_ =
         handle.IsNull() ? HandleTrait<hpx_tag>::CreateNewHandle() : handle.id_;
 
