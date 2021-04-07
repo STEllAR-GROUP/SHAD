@@ -379,8 +379,21 @@ struct SynchronousInterface<hpx_tag> {
   template <typename T>
   static void dma(const T* localAddress, const Locality & srcLoc,
                   const T* remoteData, const size_t numElements) {
-    memcpy((std::uint8_t*)localAddress, (std::uint8_t*)(remoteData),
-           numElements*sizeof(T)); // local case
+    //memcpy((std::uint8_t*)localAddress, (std::uint8_t*)(remoteData),
+    //       numElements*sizeof(T)); // local case
+
+    using action_type = invoke_dma_get_action;
+    using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
+
+    std::uint32_t loc_id = getLocalityId(srcLoc);
+    hpx::naming::id_type id = hpx::naming::get_id_from_locality_id(loc_id);
+
+    buffer_type res = hpx::sync<action_type>(id,
+            reinterpret_cast<std::size_t>(remoteData), numElements*sizeof(T));
+
+    std::memcpy(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(
+        localAddress)), res.data(), res.size());
+
   }
 };
 
