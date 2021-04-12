@@ -75,10 +75,8 @@ private:
         wait_for_completion(is_fut());
     }
 
-
     task_group(task_group const&) = delete;
     task_group& operator=(task_group const&) = delete;
-
     task_group* operator&() const = delete;
 
     static void on_ready(std::vector<hpx::future<void>>&& results,
@@ -93,21 +91,20 @@ private:
             throw std::forward<hpx::parallel::exception_list>(errors);
     }
 
-     // return future representing the execution of all tasks
-     typename hpx::parallel::util::detail::algorithm_result<ExPolicy>::type
-         when(bool throw_on_error = false)
-     {
-         std::vector<hpx::future<void>> tasks;
-         hpx::parallel::exception_list errors;
+    // return future representing the execution of all tasks
+    typename hpx::parallel::util::detail::algorithm_result<ExPolicy>::type
+        when(bool throw_on_error = false)
+    {
+        std::vector<hpx::future<void>> tasks;
+        hpx::parallel::exception_list errors;
 
-        {
+       {
             std::lock_guard<mutex_type> l(mtx_);
             std::swap(tasks_, tasks);
             std::swap(errors_, errors);
-        }
+       }
 
-        typedef hpx::parallel::util::detail::algorithm_result
-            <ExPolicy> result;
+        typedef hpx::parallel::util::detail::algorithm_result<ExPolicy> result;
 
         if (tasks.empty() && errors.size() == 0)
             return result::get();
@@ -145,9 +142,8 @@ public:
     }
 
     template <typename Executor, typename F, typename... Ts>
-    void run(F&& f, Ts&&... ts)
+    void run(Executor& exec, F&& f, Ts&&... ts)
     {
-        hpx::parallel::execution::parallel_executor exec;
         hpx::future<void> result = exec.async_execute(
             std::forward<F>(f), std::forward<Ts>(ts)...);
 
