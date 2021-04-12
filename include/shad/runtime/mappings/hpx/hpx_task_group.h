@@ -25,13 +25,12 @@
 #ifndef INCLUDE_SHAD_RUNTIME_MAPPINGS_HPX_HPX_TASK_GROUP_H_
 #define INCLUDE_SHAD_RUNTIME_MAPPINGS_HPX_HPX_TASK_GROUP_H_
 
-
 #include <exception>
+#include <memory>
 #include <mutex>
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include <memory>
 
 #include "hpx/config.hpp"
 #include "hpx/async_combinators/when_all.hpp"
