@@ -132,7 +132,6 @@ public:
     template <typename F, typename... Ts>
     void run(F&& f, Ts&&... ts)
     {
-
         hpx::parallel::execution::parallel_executor exec;
         hpx::future<void> result = exec.async_execute(std::forward<F>(f),
                 std::forward<Ts>(ts)...);
@@ -141,19 +140,8 @@ public:
         tasks_.push_back(std::move(result));
     }
 
-    template <typename Executor, typename F, typename... Ts>
-    void run(Executor& exec, F&& f, Ts&&... ts)
-    {
-        hpx::future<void> result = exec.async_execute(
-            std::forward<F>(f), std::forward<Ts>(ts)...);
-
-        std::lock_guard<mutex_type> l(mtx_);
-        tasks_.push_back(std::move(result));
-    }
-
     void wait()
     {
-
         wait_for_completion();
     }
 
