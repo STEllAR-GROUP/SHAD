@@ -48,6 +48,9 @@
 
 namespace shad {
 namespace rt {
+
+class Handle;
+
 namespace impl {
 
 template <typename ExPolicy = hpx::execution::parallel_policy>
@@ -130,19 +133,21 @@ public:
         wait_for_completion();
     }
 
+    // local case
     template <typename F, typename... Ts>
-    void run(std::vector<hpx::future<void>>&& tasks, F&& f, Ts&&... ts)
+    void run(F&& f, Ts&&... ts)
     {
         hpx::parallel::execution::parallel_executor exec;
         hpx::future<void> result = exec.async_execute(std::forward<F>(f),
                 std::forward<Ts>(ts)...);
 
         std::lock_guard<mutex_type> l(mtx_);
-        tasks.push_back(std::move(result));
+        tasks_.push_back(std::move(result));
     }
 
+    // remote case
     template <typename F, typename... Ts>
-    void run(F&& f, Ts&&... ts)
+    void run(shad::rt::Handle& handle, F&& f, Ts&&... ts)
     {
         hpx::parallel::execution::parallel_executor exec;
         hpx::future<void> result = exec.async_execute(std::forward<F>(f),
