@@ -221,30 +221,23 @@ namespace detail {
 
 //////////////////////////////////////////////////////////////////////////////
 // async functions
-    template <typename F>
-    struct invoke_async_executeAt;
-    template <typename T, typename H>
-    struct invoke_async_executeAt<void (*)(H, T)>
-    {
-        static void call(std::size_t f,
-            hpx::serialization::serialize_buffer<std::uint8_t> handle_id,
-            hpx::serialization::serialize_buffer<std::uint8_t> handle,
-            hpx::serialization::serialize_buffer<std::uint8_t> args)
-        {
-            //(*reinterpret_cast<std::decay_t<H>*>(handle.data())).id_.run([=, &handle, &args] {
-            //    reinterpret_cast<void (*)(H, T)>(f)(
-            //    std::move(*reinterpret_cast<std::decay_t<H>*>(handle.data())),
-            //    std::move(*reinterpret_cast<std::decay_t<T>*>(args.data())));
-            //});
-
-            shad::rt::impl::task_group<>::run([=, &handle, &args] {
-                reinterpret_cast<void (*)(H, T)>(f)(
-                std::move(*reinterpret_cast<std::decay_t<H>*>(handle.data())),
-                std::move(*reinterpret_cast<std::decay_t<T>*>(args.data())));
-            });
-
-        }
-    };
+    //template <typename F>
+    //struct invoke_async_executeAt;
+    //template <typename T, typename H>
+    //struct invoke_async_executeAt<void (*)(H, T)>
+    //{
+    //    static void call(std::size_t f,
+    //        hpx::serialization::serialize_buffer<std::uint8_t> args)
+    //    {
+//
+    //        shad::rt::impl::task_group<>::run([=, &handle, &args] {
+    //            reinterpret_cast<void (*)(H, T)>(f)(
+    //            std::move(*reinterpret_cast<std::decay_t<H>*>(handle.data())),
+    //            std::move(*reinterpret_cast<std::decay_t<T>*>(args.data())));
+    //        });
+//
+    //    }
+    //};
 
 }    // namespace detail
 
@@ -370,18 +363,17 @@ struct invoke_dma_get_action
 
 //////////////////////////////////////////////////////////////////////////////
 // async actions
-template <typename F>
-struct invoke_async_executeAt_action;
-template <typename T, typename H>
-struct invoke_async_executeAt_action<void (*)(H, T)>
-  : ::hpx::actions::action<
-        void (*)(std::size_t,
-            hpx::serialization::serialize_buffer<std::uint8_t>,
-            hpx::serialization::serialize_buffer<std::uint8_t>),
-        &detail::invoke_async_executeAt<void (*)(H, T)>::call,
-        invoke_async_executeAt_action<void (*)(H, T)>>
-{
-};
+//template <typename F>
+//struct invoke_async_executeAt_action;
+//template <typename T, typename H>
+//struct invoke_async_executeAt_action<void (*)(H, T)>
+//  : ::hpx::actions::action<
+//        void (*)(std::size_t,
+//            hpx::serialization::serialize_buffer<std::uint8_t>),
+//        &detail::invoke_async_executeAt<void (*)(H, T)>::call,
+//        invoke_async_executeAt_action<void (*)(H, T)>>
+//{
+//};
 
 }  // namespace impl
 
