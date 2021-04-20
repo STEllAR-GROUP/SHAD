@@ -49,7 +49,7 @@
 namespace shad {
 namespace rt {
 
-class Handle;
+//class Handle;
 
 namespace impl {
 
@@ -124,7 +124,7 @@ private:
 
 public:
     explicit task_group(ExPolicy const& policy = ExPolicy())
-        : id_(hpx::threads::get_self_id())
+    //    : id_(hpx::threads::get_self_id())
     {
     }
 
@@ -145,17 +145,17 @@ public:
         tasks_.push_back(std::move(result));
     }
 
-    // remote case
-    template <typename F, typename... Ts>
-    void run(shad::rt::Handle& handle, F&& f, Ts&&... ts)
-    {
-        hpx::parallel::execution::parallel_executor exec;
-        hpx::future<void> result = exec.async_execute(std::forward<F>(f),
-                std::forward<Ts>(ts)...);
-
-        std::lock_guard<mutex_type> l(mtx_);
-        tasks_.push_back(std::move(result));
-    }
+    //// remote case
+    //template <typename F, typename... Ts>
+    //void run(shad::rt::Handle& handle, F&& f, Ts&&... ts)
+    //{
+    //    hpx::parallel::execution::parallel_executor exec;
+    //    hpx::future<void> result = exec.async_execute(std::forward<F>(f),
+    //            std::forward<Ts>(ts)...);
+//
+    //    std::lock_guard<mutex_type> l(mtx_);
+    //    tasks_.push_back(std::move(result));
+    //}
 
     void wait()
     {
@@ -167,7 +167,7 @@ private:
     mutable mutex_type mtx_;
     std::vector<hpx::future<void>> tasks_;
     hpx::parallel::exception_list errors_;
-    hpx::threads::thread_id_type id_;
+    //hpx::threads::thread_id_type id_;
 };
 
 }  // namespace impl

@@ -231,6 +231,7 @@ TEST_F(ExecuteAtTest, SyncExecuteAtWithRetBuffExplicit) {
     std::memcpy(argsBuffer.get(), &data, sizeof(exData));
 
     exData retData;
+    //uint32_t retSize;
     uint32_t retSize = sizeof(retData);
     for (size_t i = 0; i < kNumIters; i++) {
       shad::rt::executeAtWithRetBuff(

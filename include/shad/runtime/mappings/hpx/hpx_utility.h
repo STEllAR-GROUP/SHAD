@@ -58,6 +58,7 @@ inline void checkLocality(const Locality& loc) {
 namespace detail {
     ///////////////////////////////////////////////////////////////////////
     // simple utility action which invoke an arbitrary global function
+    // sync functions
     template <typename F>
     struct invoke_executeAt;
     template <typename T>
@@ -217,12 +218,42 @@ namespace detail {
             return result;
         }
     };
+
+//////////////////////////////////////////////////////////////////////////////
+// async functions
+    template <typename F>
+    struct invoke_async_executeAt;
+    template <typename T, typename H>
+    struct invoke_async_executeAt<void (*)(H, T)>
+    {
+        static void call(std::size_t f,
+            hpx::serialization::serialize_buffer<std::uint8_t> handle_id,
+            hpx::serialization::serialize_buffer<std::uint8_t> handle,
+            hpx::serialization::serialize_buffer<std::uint8_t> args)
+        {
+            //(*reinterpret_cast<std::decay_t<H>*>(handle.data())).id_.run([=, &handle, &args] {
+            //    reinterpret_cast<void (*)(H, T)>(f)(
+            //    std::move(*reinterpret_cast<std::decay_t<H>*>(handle.data())),
+            //    std::move(*reinterpret_cast<std::decay_t<T>*>(args.data())));
+            //});
+
+            shad::rt::impl::task_group<>::run([=, &handle, &args] {
+                reinterpret_cast<void (*)(H, T)>(f)(
+                std::move(*reinterpret_cast<std::decay_t<H>*>(handle.data())),
+                std::move(*reinterpret_cast<std::decay_t<T>*>(args.data())));
+            });
+
+        }
+    };
+
 }    // namespace detail
 
 // action definition exposing invoke_function_ptr<> that binds a global
 // function (Note: this assumes global function addresses are the same on
-// all localities. This also assumes that all argument types are bitwise
+// all localities. //////////////////////////////////////////////////////////////////////////////This also assumes that all argument types are bitwise
 // copyable
+
+// sync actions
 template <typename F>
 struct invoke_executeAt_action;
 template <typename T>
@@ -334,6 +365,21 @@ struct invoke_dma_get_action
             std::size_t, std::size_t),
         &detail::invoke_dma_get::call,
         invoke_dma_get_action>
+{
+};
+
+//////////////////////////////////////////////////////////////////////////////
+// async actions
+template <typename F>
+struct invoke_async_executeAt_action;
+template <typename T, typename H>
+struct invoke_async_executeAt_action<void (*)(H, T)>
+  : ::hpx::actions::action<
+        void (*)(std::size_t,
+            hpx::serialization::serialize_buffer<std::uint8_t>,
+            hpx::serialization::serialize_buffer<std::uint8_t>),
+        &detail::invoke_async_executeAt<void (*)(H, T)>::call,
+        invoke_async_executeAt_action<void (*)(H, T)>>
 {
 };
 
