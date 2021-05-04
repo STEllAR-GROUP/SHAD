@@ -56,16 +56,17 @@ struct AsynchronousInterface<hpx_tag> {
 
     handle.id_ =
         handle.IsNull() ? HandleTrait<hpx_tag>::CreateNewHandle() : handle.id_;
-    handle.id_->run([=, &handle] { fn(handle, args); }); // local case
+    //handle.id_->run([=, &handle] { fn(handle, args); });  // local case
 
+    using action_type = invoke_async_executeAt_action<decltype(fn)>;
+    using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
-    //using action_type = invoke_async_executeAt_action<decltype(fn)>;
-    //using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
-//
-    //std::uint32_t loc_id = getLocalityId(loc);
-    //hpx::naming::id_type id = hpx::naming::get_id_from_locality_id(loc_id);
-//
-    //handle.id_->run_remote<action_type>(loc, fn, handle, args);
+    std::uint32_t loc_id = getLocalityId(loc);
+    hpx::naming::id_type id = hpx::naming::get_id_from_locality_id(loc_id);
+
+    handle.id_->run_remote<action_type>(id, reinterpret_cast<std::size_t>(fn), 
+        buffer_type(reinterpret_cast<const std::uint8_t*>(&args), sizeof(args),
+                    buffer_type::reference));
   }
 
   template <typename FunT>
@@ -202,7 +203,7 @@ struct AsynchronousInterface<hpx_tag> {
 
     handle.id_->run([=, &handle] {
       hpx::for_loop(hpx::execution::par, 0, numIters,
-                  [=, &handle](std::size_t i) {fn(handle, args, i);});
+                    [=, &handle](std::size_t i) { fn(handle, args, i); });
     });
   }
 
@@ -223,11 +224,10 @@ struct AsynchronousInterface<hpx_tag> {
 
     handle.id_->run([=, &handle] {
       hpx::for_loop(hpx::execution::par, 0, numIters,
-                  [=, &handle](std::size_t i) {
-                    fn(handle, argsBuffer.get(), bufferSize, i);
-                  });
+                    [=, &handle](std::size_t i) {
+                      fn(handle, argsBuffer.get(), bufferSize, i);
+                    });
     });
-
   }
 
   template <typename FunT, typename InArgsT>
@@ -242,9 +242,7 @@ struct AsynchronousInterface<hpx_tag> {
 
     handle.id_->run([=, &handle] {
       hpx::for_loop(hpx::execution::par, 0, numIters,
-                  [=, &handle](std::size_t i) {
-                    fn(handle, args, i);
-                  });
+                    [=, &handle](std::size_t i) { fn(handle, args, i); });
     });
   }
 
@@ -263,12 +261,11 @@ struct AsynchronousInterface<hpx_tag> {
 
     handle.id_->run([=, &handle] {
       hpx::for_loop(hpx::execution::par, 0, numIters,
-                  [=, &handle](std::size_t i) {
-                    fn(handle, argsBuffer.get(), bufferSize, i);
-                  });
+                    [=, &handle](std::size_t i) {
+                      fn(handle, argsBuffer.get(), bufferSize, i);
+                    });
     });
   }
-
 };
 
 }  // namespace impl
