@@ -147,7 +147,8 @@ public:
 
     // remote case
     template <typename Action, typename... Ts>
-    void run_remote(const Locality &loc, Ts&&... ts)
+    //void run_remote(const Locality &loc, Ts&&... ts)
+    void run_remote(hpx::naming::id_type const& loc, Ts&&... ts)
     {
         hpx::future<void> result = hpx::async<Action>(loc,
             std::forward<Ts>(ts)...);
