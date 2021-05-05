@@ -137,7 +137,7 @@ public:
     template <typename F, typename... Ts>
     void run(F&& f, Ts&&... ts)
     {
-        hpx::parallel::execution::parallel_executor exec;
+        hpx::execution::parallel_executor exec;
         hpx::future<void> result = exec.async_execute(std::forward<F>(f),
                 std::forward<Ts>(ts)...);
 
