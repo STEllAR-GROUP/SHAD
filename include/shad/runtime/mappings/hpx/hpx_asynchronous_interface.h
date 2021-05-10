@@ -58,7 +58,7 @@ struct AsynchronousInterface<hpx_tag> {
         handle.IsNull() ? HandleTrait<hpx_tag>::CreateNewHandle() : handle.id_;
     //handle.id_->run([=, &handle] { fn(handle, args); });  // local case
 
-    using action_type = invoke_async_executeAt_action<decltype(fn)>;
+    using action_type = invoke_asyncExecuteAt_action<decltype(fn)>;
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
     std::uint32_t loc_id = getLocalityId(loc);
@@ -83,7 +83,18 @@ struct AsynchronousInterface<hpx_tag> {
     handle.id_ =
         handle.IsNull() ? HandleTrait<hpx_tag>::CreateNewHandle() : handle.id_;
 
-    handle.id_->run([=, &handle] { fn(handle, argsBuffer.get(), bufferSize); });
+    // local case
+    //handle.id_->run([=, &handle] { fn(handle, argsBuffer.get(), bufferSize); });
+
+    using action_type = invoke_asyncExecuteAt_buff_action<decltype(fn)>;
+    using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
+
+    std::uint32_t loc_id = getLocalityId(loc);
+    hpx::naming::id_type id = hpx::naming::get_id_from_locality_id(loc_id);
+
+    handle.id_->run_remote<action_type>(id, reinterpret_cast<std::size_t>(fn), 
+        buffer_type(argsBuffer.get(), bufferSize, buffer_type::copy));
+        
   }
 
   template <typename FunT, typename InArgsT>
@@ -101,8 +112,22 @@ struct AsynchronousInterface<hpx_tag> {
     handle.id_ =
         handle.IsNull() ? HandleTrait<hpx_tag>::CreateNewHandle() : handle.id_;
 
+    // local case
     handle.id_->run(
         [=, &handle] { fn(handle, args, resultBuffer, resultSize); });
+    
+    //using action_type = invoke_asyncExecuteAtWithRetBuff_action<decltype(fn)>;
+    //using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
+//
+    //std::uint32_t loc_id = getLocalityId(loc);
+    //hpx::naming::id_type id = hpx::naming::get_id_from_locality_id(loc_id);
+//
+    //buffer_type result = handle.id_->run_remote<action_type>(
+    //    id, reinterpret_cast<std::size_t>(fn), 
+    //    buffer_type(reinterpret_cast<std::uint8_t const*>(&args), sizeof(args),
+    //               buffer_type::reference), *resultSize);
+    //
+    //std::memcpy(resultBuffer, result.data(), result.size());
   }
 
   template <typename FunT>
