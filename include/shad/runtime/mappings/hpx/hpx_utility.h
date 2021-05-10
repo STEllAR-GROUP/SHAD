@@ -82,6 +82,7 @@ namespace detail {
                 args.data(), args.size());
         }
     };
+
     template <typename F>
     struct invoke_executeAtWithRetBuff;
     template <typename T>
@@ -223,9 +224,9 @@ namespace detail {
 //////////////////////////////////////////////////////////////////////////////
 // async functions
     template <typename F>
-    struct invoke_async_executeAt;
+    struct invoke_asyncExecuteAt;
     template <typename T, typename H>
-    struct invoke_async_executeAt<void (*)(H, T)>
+    struct invoke_asyncExecuteAt<void (*)(H, T)>
     {
         static void call(std::size_t f,
             hpx::serialization::serialize_buffer<std::uint8_t> args)
@@ -236,15 +237,57 @@ namespace detail {
                 *reinterpret_cast<std::decay_t<T>*>(args.data()));
 
             waitForCompletion(h);
+        }
+    };
+
+    template <typename F>
+    struct invoke_asyncExecuteAt_buff;
+    template <typename H>
+    struct invoke_asyncExecuteAt_buff<void (*)(H, const uint8_t *, const uint32_t)>
+    {
+        static void call(std::size_t f,
+            hpx::serialization::serialize_buffer<std::uint8_t> args)
+        {
+            std::remove_reference_t<H> h;
+            
+            reinterpret_cast<void (*)(H, const uint8_t *, const uint32_t)>(f)(h, 
+                args.data(), args.size());
+
+            waitForCompletion(h);
 
         }
     };
+
+
+
+    //template <typename F>
+    //struct invoke_asyncExecuteAtWithRetBuff;
+    //template <typename T, typename H>
+    //struct invoke_asyncExecuteAtWithRetBuff<void (*)(H, T, const uint8_t *, const uint32_t)>
+    //{
+    //    static hpx::serialization::serialize_buffer<std::uint8_t> call(std::size_t f,
+    //        hpx::serialization::serialize_buffer<std::uint8_t> args, std::uint32_t size)
+    //    {
+    //        std::remove_reference_t<H> h;
+//
+    //        hpx::serialization::serialize_buffer<std::uint8_t> result(size);
+    //        
+    //        reinterpret_cast<void (*)(H, T, const uint8_t *, const uint32_t)>(f)(h,
+    //            *reinterpret_cast<std::decay_t<T>*>(args.data()), 
+    //            result.data(), &size);
+//
+    //        waitForCompletion(h);
+    //        return result;
+//
+    //    }
+    //};
+    
 
 }    // namespace detail
 
 // action definition exposing invoke_function_ptr<> that binds a global
 // function (Note: this assumes global function addresses are the same on
-// all localities. //////////////////////////////////////////////////////////////////////////////This also assumes that all argument types are bitwise
+// all localities. This also assumes that all argument types are bitwise
 // copyable
 
 // sync actions
@@ -365,16 +408,45 @@ struct invoke_dma_get_action
 //////////////////////////////////////////////////////////////////////////////
 // async actions
 template <typename F>
-struct invoke_async_executeAt_action;
+struct invoke_asyncExecuteAt_action;
 template <typename T, typename H>
-struct invoke_async_executeAt_action<void (*)(H, T)>
+struct invoke_asyncExecuteAt_action<void (*)(H, T)>
   : ::hpx::actions::action<
         void (*)(std::size_t,
             hpx::serialization::serialize_buffer<std::uint8_t>),
-        &detail::invoke_async_executeAt<void (*)(H, T)>::call,
-        invoke_async_executeAt_action<void (*)(H, T)>>
+        &detail::invoke_asyncExecuteAt<void (*)(H, T)>::call,
+        invoke_asyncExecuteAt_action<void (*)(H, T)>>
 {
 };
+
+template <typename F>
+struct invoke_asyncExecuteAt_buff_action;
+template <typename H>
+struct invoke_asyncExecuteAt_buff_action<void (*)(H, const uint8_t *, const uint32_t)>
+  : ::hpx::actions::action<
+        void (*)(std::size_t,
+            hpx::serialization::serialize_buffer<std::uint8_t>),
+        &detail::invoke_asyncExecuteAt_buff<void (*)(H, const uint8_t *, 
+            const uint32_t)>::call,
+        invoke_asyncExecuteAt_buff_action<void (*)(H, const uint8_t *, const uint32_t)>>
+{
+};
+
+
+
+//template <typename F>
+//struct invoke_asyncExecuteAtWithRetBuff_action;
+//template <typename T, typename H>
+//struct invoke_asyncExecuteAtWithRetBuff_action<void (*)(H, T, const uint8_t *, const uint32_t)>
+//  : ::hpx::actions::action<
+//        hpx::serialization::serialize_buffer<std::uint8_t> (*)(std::size_t,
+//            hpx::serialization::serialize_buffer<std::uint8_t>, std::uint32_t),
+//        &detail::invoke_asyncExecuteAtWithRetBuff<
+//            void (*)(H, T, const uint8_t *, const uint32_t)>::call,
+//        invoke_asyncExecuteAtWithRetBuff_action<
+//            void (*)(H, T, const uint8_t *, const uint32_t)>>
+//{
+//};
 
 }  // namespace impl
 
