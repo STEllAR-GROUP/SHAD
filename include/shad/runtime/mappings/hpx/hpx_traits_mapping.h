@@ -48,7 +48,7 @@ struct HandleTrait<hpx_tag> {
   using ParameterTy = std::shared_ptr<task_group<>> &;
   using ConstParameterTy = const std::shared_ptr<task_group<>> &;
 
-  static void Init(ParameterTy H, ConstParameterTy V) { H = V;}
+  static void Init(ParameterTy H, ConstParameterTy V) {}
 
   static HandleTy NullValue() {
     return std::shared_ptr<task_group<>>(nullptr);
