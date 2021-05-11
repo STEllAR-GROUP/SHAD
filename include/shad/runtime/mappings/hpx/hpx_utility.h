@@ -357,26 +357,48 @@ namespace detail {
         }
     };
 
-    //template <typename F>
-    //struct invoke_asyncForEachAt;
-    //template <typename T, typename H>
-    //struct invoke_asyncForEachAt<void(*)(H, T, std::size_t)>
-    //{
-    //    static void call(std::size_t f,
-    //        hpx::serialization::serialize_buffer<std::uint8_t> args,
-    //        std::size_t numIters)
-    //    {        
-//
-    //        hpx::for_loop(hpx::execution::par, 0, numIters,
-    //              [&](std::size_t i) {
-    //                  std::remove_reference_t<H> h;
-    //                  reinterpret_cast<void (*)(H, T, std::size_t)>(f)(h,
-    //                        *reinterpret_cast<std::decay_t<T>*>(args.data()), i);
-    //                  waitForCompletion(h);
-    //              });
-//
-    //    }
-    //};
+    template <typename F>
+    struct invoke_asyncForEachAt;
+    template <typename T, typename H>
+    struct invoke_asyncForEachAt<void(*)(H, T, std::size_t)>
+    {
+        static void call(std::size_t f,
+            hpx::serialization::serialize_buffer<std::uint8_t> args,
+            std::size_t numIters)
+        {        
+            std::remove_reference_t<H> h;
+            hpx::for_loop(hpx::execution::par, 0, numIters,
+                  [&](std::size_t i) {
+                      
+                      reinterpret_cast<void (*)(H, T, std::size_t)>(f)(h,
+                            *reinterpret_cast<std::decay_t<T>*>(args.data()), i);
+                      
+                  });
+            waitForCompletion(h);
+        }
+    };
+
+    template <typename F>
+    struct invoke_asyncForEachAt_buff;
+    template <typename H>
+    struct invoke_asyncForEachAt_buff<void(*)(H, const uint8_t *, const uint32_t,
+        std::size_t)>
+    {
+        static void call(std::size_t f,
+            hpx::serialization::serialize_buffer<std::uint8_t> args,
+            std::size_t numIters)
+        {        
+            std::remove_reference_t<H> h;
+            hpx::for_loop(hpx::execution::par, 0, numIters,
+                [&](std::size_t i) {
+                    
+                    reinterpret_cast<void (*)(H, const uint8_t *, const uint32_t,
+                          std::size_t)>(f)(h, args.data(), args.size(), i);
+                    
+                });
+            waitForCompletion(h);
+        }
+    };
     
 
 }    // namespace detail
@@ -588,17 +610,32 @@ struct invoke_asyncExecuteAtWithRet_buff_action<void (*)(H, const uint8_t *,
 {
 };
 
-//template <typename F>
-//struct invoke_asyncForEachAt_action;
-//template <typename T, typename H>
-//struct invoke_asyncForEachAt_action<void (*)(H, T, std::size_t)>
-//  : ::hpx::actions::action<
-//        void (*)(std::size_t,
-//            hpx::serialization::serialize_buffer<std::uint8_t>, std::size_t),
-//        &detail::invoke_asyncForEachAt<void (*)(H, T, std::size_t)>::call,
-//        invoke_asyncForEachAt_action<void (*)(H, T, std::size_t)>>
-//{
-//};
+template <typename F>
+struct invoke_asyncForEachAt_action;
+template <typename T, typename H>
+struct invoke_asyncForEachAt_action<void (*)(H, T, std::size_t)>
+  : ::hpx::actions::action<
+        void (*)(std::size_t,
+            hpx::serialization::serialize_buffer<std::uint8_t>, std::size_t),
+        &detail::invoke_asyncForEachAt<void (*)(H, T, std::size_t)>::call,
+        invoke_asyncForEachAt_action<void (*)(H, T, std::size_t)>>
+{
+};
+
+template <typename F>
+struct invoke_asyncForEachAt_buff_action;
+template <typename H>
+struct invoke_asyncForEachAt_buff_action<void (*)(H, const uint8_t *, const uint32_t,
+    std::size_t)>
+  : ::hpx::actions::action<
+        void (*)(std::size_t,
+            hpx::serialization::serialize_buffer<std::uint8_t>, std::size_t),
+        &detail::invoke_asyncForEachAt_buff<void (*)(H, const uint8_t *, const uint32_t,
+            std::size_t)>::call,
+        invoke_asyncForEachAt_buff_action<void (*)(H, const uint8_t *, const uint32_t,
+            std::size_t)>>
+{
+};
 
 
 }  // namespace impl
