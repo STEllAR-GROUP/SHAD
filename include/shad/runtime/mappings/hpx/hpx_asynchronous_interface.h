@@ -306,20 +306,22 @@ struct AsynchronousInterface<hpx_tag> {
     handle.id_ =
         handle.IsNull() ? HandleTrait<hpx_tag>::CreateNewHandle() : handle.id_;
 
-    handle.id_->run([=, &handle] {
-      hpx::for_loop(hpx::execution::par, 0, numIters,
-                    [=, &handle](std::size_t i) { fn(handle, args, i); });
-    }); // local case
+    //handle.id_->run([=, &handle] {
+    //  hpx::for_loop(hpx::execution::par, 0, numIters,
+    //                [=, &handle](std::size_t i) { fn(handle, args, i); });
+    //}); // local case
 
-    //using action_type = invoke_asyncForEachAt_action<decltype(fn)>;
-    //using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
-//
-    //std::uint32_t loc_id = getLocalityId(loc);
-    //hpx::naming::id_type id = hpx::naming::get_id_from_locality_id(loc_id);
-//
-    //handle.id_->run_remote<action_type>(id, reinterpret_cast<std::size_t>(fn),
-    //    buffer_type(reinterpret_cast<const std::uint8_t*>(&args), sizeof(args),
-    //        buffer_type::reference), numIters);
+    using action_type = invoke_asyncForEachAt_action<decltype(fn)>;
+    using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
+
+    std::uint32_t loc_id = getLocalityId(loc);
+    hpx::naming::id_type id = hpx::naming::get_id_from_locality_id(loc_id);
+
+    handle.id_->run([=](){
+        action_type()(id, reinterpret_cast<std::size_t>(fn),
+            buffer_type(reinterpret_cast<const std::uint8_t*>(&args), sizeof(args),
+            buffer_type::reference), numIters);
+    });
   }
 
   template <typename FunT>
@@ -337,11 +339,23 @@ struct AsynchronousInterface<hpx_tag> {
     handle.id_ =
         handle.IsNull() ? HandleTrait<hpx_tag>::CreateNewHandle() : handle.id_;
 
-    handle.id_->run([=, &handle] {
-      hpx::for_loop(hpx::execution::par, 0, numIters,
-                    [=, &handle](std::size_t i) {
-                      fn(handle, argsBuffer.get(), bufferSize, i);
-                    });
+    //handle.id_->run([=, &handle] {
+    //  hpx::for_loop(hpx::execution::par, 0, numIters,
+    //                [=, &handle](std::size_t i) {
+    //                  fn(handle, argsBuffer.get(), bufferSize, i);
+    //                });
+    //}); // local case
+
+    using action_type = invoke_asyncForEachAt_buff_action<decltype(fn)>;
+    using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
+
+    std::uint32_t loc_id = getLocalityId(loc);
+    hpx::naming::id_type id = hpx::naming::get_id_from_locality_id(loc_id);
+
+    handle.id_->run([=](){
+        action_type()(id, reinterpret_cast<std::size_t>(fn),
+            buffer_type(argsBuffer.get(), bufferSize, buffer_type::reference),
+            numIters);
     });
   }
 
@@ -355,9 +369,34 @@ struct AsynchronousInterface<hpx_tag> {
     handle.id_ =
         handle.IsNull() ? HandleTrait<hpx_tag>::CreateNewHandle() : handle.id_;
 
-    handle.id_->run([=, &handle] {
-      hpx::for_loop(hpx::execution::par, 0, numIters,
-                    [=, &handle](std::size_t i) { fn(handle, args, i); });
+    //handle.id_->run([=, &handle] {
+    //  hpx::for_loop(hpx::execution::par, 0, numIters,
+    //                [=, &handle](std::size_t i) { fn(handle, args, i); });
+    //}); // local case
+
+    using action_type = invoke_asyncForEachAt_action<decltype(fn)>;
+    using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
+
+    std::vector<hpx::id_type> localities = hpx::find_all_localities();
+
+    std::size_t iters = numIters / hpx::get_num_localities(hpx::launch::sync);
+    std::size_t iters_last = numIters -
+        (iters * (hpx::get_num_localities(hpx::launch::sync) - 1));
+    
+    for (auto it = localities.begin(); it != std::prev(localities.end()); ++it)
+    {
+        handle.id_->run([=](){
+            action_type()(*it, reinterpret_cast<std::size_t>(fn),
+                buffer_type(reinterpret_cast<const std::uint8_t*>(&args),
+                sizeof(args), buffer_type::reference), iters);
+        });
+    }
+
+    handle.id_->run([=](){
+        action_type()(localities.back(),
+            reinterpret_cast<std::size_t>(fn),
+                buffer_type(reinterpret_cast<const std::uint8_t*>(&args),
+                    sizeof(args), buffer_type::reference), iters_last);
     });
   }
 
@@ -374,12 +413,38 @@ struct AsynchronousInterface<hpx_tag> {
     handle.id_ =
         handle.IsNull() ? HandleTrait<hpx_tag>::CreateNewHandle() : handle.id_;
 
-    handle.id_->run([=, &handle] {
-      hpx::for_loop(hpx::execution::par, 0, numIters,
-                    [=, &handle](std::size_t i) {
-                      fn(handle, argsBuffer.get(), bufferSize, i);
-                    });
+    //handle.id_->run([=, &handle] {
+    //  hpx::for_loop(hpx::execution::par, 0, numIters,
+    //                [=, &handle](std::size_t i) {
+    //                  fn(handle, argsBuffer.get(), bufferSize, i);
+    //                });
+    //}); //local case
+
+    using action_type = invoke_asyncForEachAt_buff_action<decltype(fn)>;
+    using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
+
+    std::vector<hpx::id_type> localities = hpx::find_all_localities();
+
+    std::size_t iters = numIters / hpx::get_num_localities(hpx::launch::sync);
+    std::size_t iters_last = numIters -
+        (iters * (hpx::get_num_localities(hpx::launch::sync) - 1));
+    
+    for (auto it = localities.begin(); it != std::prev(localities.end()); ++it)
+    {
+        handle.id_->run([=](){
+            action_type()(*it, reinterpret_cast<std::size_t>(fn),
+                buffer_type(argsBuffer.get(), bufferSize, buffer_type::reference), 
+                iters);
+        });
+    }
+
+    handle.id_->run([=](){
+        action_type()(localities.back(),
+            reinterpret_cast<std::size_t>(fn),
+                buffer_type(argsBuffer.get(), bufferSize, buffer_type::reference),
+                iters_last);
     });
+
   }
 };
 
