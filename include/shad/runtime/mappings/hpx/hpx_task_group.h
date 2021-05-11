@@ -145,30 +145,6 @@ public:
         tasks_.push_back(std::move(result));
     }
 
-    // remote case
-    template <typename Action, typename... Ts>
-    //void run_remote(const Locality &loc, Ts&&... ts)
-    void run_remote(hpx::naming::id_type const& loc, Ts&&... ts)
-    {
-        hpx::future<void> result = hpx::async<Action>(loc,
-            std::forward<Ts>(ts)...);
-
-        std::lock_guard<mutex_type> l(mtx_);
-        tasks_.push_back(std::move(result));
-    }
-
-    // remote case with return
-    template <typename R, typename Action, typename... Ts>
-    R run_remote_ret(hpx::naming::id_type const& loc, Ts&&... ts)
-    {
-        hpx::future<R> result = hpx::async<Action>(loc,
-            std::forward<Ts>(ts)...);
-
-        std::lock_guard<mutex_type> l(mtx_);
-        tasks_.push_back(std::move(result));
-        return result.get();
-    }
-
     void wait()
     {
         wait_for_completion();
