@@ -262,7 +262,7 @@ TEST_F(ExecuteAtTest, SyncExecuteAtWithRetBuffExplicit) {
 
 TEST_F(ExecuteAtTest, AsyncExecuteAtWithRetBuffExplicit) {
   std::vector<exData> retData(shad::rt::numLocalities() * kNumIters);
-  std::vector<uint32_t> retSizes(shad::rt::numLocalities() * kNumIters, 0);
+  std::vector<uint32_t> retSizes(shad::rt::numLocalities() * kNumIters, sizeof(exData));
 
   shad::rt::Handle handle;
 
