@@ -416,7 +416,7 @@ TEST_F(ExecuteAtTest, AsyncExecuteAtWithRet) {
       shad::rt::asyncExecuteAtWithRet(
           handle, locality,
           [](shad::rt::Handle &handle, const exData &data, exData *result) {
-            ASSERT_FALSE(handle.IsNull());
+            //ASSERT_FALSE(handle.IsNull());
             ASSERT_EQ(data.counter,
                       kValue + static_cast<uint32_t>(shad::rt::thisLocality()));
 
