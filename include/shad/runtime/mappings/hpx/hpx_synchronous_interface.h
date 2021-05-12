@@ -302,16 +302,18 @@ struct SynchronousInterface<hpx_tag> {
     std::size_t iters_last = numIters -
         (iters * (hpx::get_num_localities(hpx::launch::sync) - 1));
 
-    for (auto it = localities.begin(); it != std::prev(localities.end()); ++it)
+    for (std::size_t i = 0; i != localities.size() - 1; ++i)
     {
+        hpx::id_type const& loc = localities[i];
         futures.push_back(
-            hpx::async<action_type>(*it, reinterpret_cast<std::size_t>(fn),
+            hpx::async<action_type>(loc, reinterpret_cast<std::size_t>(fn),
                 buffer_type(reinterpret_cast<const std::uint8_t*>(&args),
                     sizeof(args), buffer_type::reference), iters));
     }
 
+    hpx::id_type const& loc = localities[localities.size() - 1];
     futures.push_back(
-        hpx::async<action_type>(localities.back(),
+        hpx::async<action_type>(loc,
             reinterpret_cast<std::size_t>(fn),
                 buffer_type(reinterpret_cast<const std::uint8_t*>(&args),
                     sizeof(args), buffer_type::reference), iters_last));
@@ -341,16 +343,18 @@ struct SynchronousInterface<hpx_tag> {
     std::size_t iters_last = numIters -
         (iters * (hpx::get_num_localities(hpx::launch::sync) - 1));
 
-    for (auto it = localities.begin(); it != std::prev(localities.end()); ++it)
+    for (std::size_t i = 0; i != localities.size() - 1; ++i)
     {
-      futures.push_back(
-          hpx::async<action_type>(*it, reinterpret_cast<std::size_t>(fn),
-              buffer_type(argsBuffer.get(), bufferSize, buffer_type::reference),
-                  iters));
+        hpx::id_type const& loc = localities[i];
+        futures.push_back(
+            hpx::async<action_type>(loc, reinterpret_cast<std::size_t>(fn),
+                buffer_type(argsBuffer.get(), bufferSize, buffer_type::reference),
+                iters));
     }
 
+    hpx::id_type const& loc = localities[localities.size() - 1];
     futures.push_back(
-        hpx::async<action_type>(localities.back(),
+        hpx::async<action_type>(loc,
             reinterpret_cast<std::size_t>(fn), buffer_type(argsBuffer.get(),
                 bufferSize, buffer_type::reference), iters_last));
 
