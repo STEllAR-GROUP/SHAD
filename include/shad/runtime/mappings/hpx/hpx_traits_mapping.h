@@ -32,7 +32,7 @@
 
 #include "hpx/hpx.hpp"
 
-//#include "shad/runtime/mappings/hpx/hpx_task_group.h"
+#include "shad/runtime/mappings/hpx/hpx_task_group.h"
 #include "shad/runtime/mapping_traits.h"
 
 namespace shad {
@@ -42,7 +42,6 @@ namespace impl {
 
 struct hpx_tag {};
 
-/***
 template <>
 struct HandleTrait<hpx_tag> {
   using HandleTy = std::shared_ptr<task_group<>>;
@@ -74,40 +73,7 @@ struct HandleTrait<hpx_tag> {
     H->wait();
   }
 };
-***/
 
-template <>
-struct HandleTrait<hpx_tag> {
-  using hpx_task_goup = hpx::execution::experimental::task_group;
-  using HandleTy = std::shared_ptr<hpx_task_goup>;
-  using ParameterTy = std::shared_ptr<hpx_task_goup> &;
-  using ConstParameterTy = const std::shared_ptr<hpx_task_goup> &;
-
-  static void Init(ParameterTy H, ConstParameterTy V) {}
-
-  static HandleTy NullValue() {
-    return std::shared_ptr<hpx_task_goup>(nullptr);
-  }
-
-  static bool Equal(ConstParameterTy lhs, ConstParameterTy rhs) {
-    return lhs == rhs;
-  }
-
-  static std::string toString(ConstParameterTy H) { return ""; }
-
-  static uint64_t toUnsignedInt(ConstParameterTy H) {
-    return reinterpret_cast<uint64_t>(H.get());
-  }
-
-  static HandleTy CreateNewHandle() {
-    return std::shared_ptr<hpx_task_goup>(new hpx_task_goup());
-  }
-
-  static void WaitFor(ParameterTy H) {
-    if (H == nullptr) return;
-    H->wait();
-  }
-};
 
 template <>
 struct LockTrait<hpx_tag> {
