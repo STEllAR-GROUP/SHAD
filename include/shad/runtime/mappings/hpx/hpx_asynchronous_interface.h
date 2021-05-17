@@ -132,7 +132,7 @@ struct AsynchronousInterface<hpx_tag> {
             buffer_type::reference), *resultSize);
 
         std::memcpy(resultBuffer, result.data(), result.size());
-        // *resultSize = result.size(); // FIXME
+        *resultSize = result.size();
     });
   }
 
@@ -168,7 +168,7 @@ struct AsynchronousInterface<hpx_tag> {
             *resultSize);
 
         std::memcpy(resultBuffer, result.data(), result.size());
-        // *resultSize = result.size(); // FIXME
+        *resultSize = result.size();
     });
   }
 

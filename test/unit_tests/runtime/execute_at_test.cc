@@ -86,18 +86,6 @@ static void asynIncrFunWithRetBuffExplicit(shad::rt::Handle & /*unused*/,
   *reinterpret_cast<exData *>(result) = res;
 };
 
-static void asynIncrFunWithRetBuff(shad::rt::Handle & /*unused*/,
-                                           const exData &data,
-                                           uint8_t *result, uint32_t *resSize) {
-  __sync_fetch_and_add(&globalData.counter, data.counter);
-  globalData.locality = data.locality;
-  exData res{data.counter + 1, data.locality};
-
-  *resSize = sizeof(res);
-  *reinterpret_cast<exData *>(result) = res;
-};
-
-
 static void incrFunWithRetExplicit(const uint8_t *argsBuffer,
                                    const uint32_t /*bufferSize*/,
                                    exData *result) {
@@ -130,8 +118,8 @@ static void asyncIncrFunExplicit(shad::rt::Handle & /*unused*/,
 }
 
 static void check(const uint8_t * /*unused*/, const uint32_t /*unused*/) {
-  std::cout << globalData.locality << "counter: " << globalData.counter
-            << std::endl;
+  //std::cout << globalData.locality << "counter: " << globalData.counter
+  //          << std::endl;
   ASSERT_EQ(globalData.locality, shad::rt::thisLocality());
   ASSERT_EQ(globalData.counter,
             (kValue + static_cast<uint32_t>(globalData.locality)) * kNumIters);
@@ -243,8 +231,7 @@ TEST_F(ExecuteAtTest, SyncExecuteAtWithRetBuffExplicit) {
     std::memcpy(argsBuffer.get(), &data, sizeof(exData));
 
     exData retData;
-    //uint32_t retSize;
-    uint32_t retSize = sizeof(retData);
+    uint32_t retSize;
     for (size_t i = 0; i < kNumIters; i++) {
       shad::rt::executeAtWithRetBuff(
           loc, incrFunWithRetBuffExplicit, argsBuffer, sizeof(data),
@@ -262,7 +249,7 @@ TEST_F(ExecuteAtTest, SyncExecuteAtWithRetBuffExplicit) {
 
 TEST_F(ExecuteAtTest, AsyncExecuteAtWithRetBuffExplicit) {
   std::vector<exData> retData(shad::rt::numLocalities() * kNumIters);
-  std::vector<uint32_t> retSizes(shad::rt::numLocalities() * kNumIters, sizeof(exData));
+  std::vector<uint32_t> retSizes(shad::rt::numLocalities() * kNumIters, 0);
 
   shad::rt::Handle handle;
 
@@ -282,6 +269,7 @@ TEST_F(ExecuteAtTest, AsyncExecuteAtWithRetBuffExplicit) {
           &retSizes[idx]);
     }
   }
+
   ASSERT_FALSE(handle.IsNull());
   shad::rt::waitForCompletion(handle);
 
@@ -318,45 +306,6 @@ TEST_F(ExecuteAtTest, SyncExecuteAtWithRetBuff) {
     }
   }
   for (auto loc : shad::rt::allLocalities()) {
-    shad::rt::executeAt(loc, check, nullptr, 0);
-  }
-}
-
-TEST_F(ExecuteAtTest, asyncExecuteAtWithRetBuff) {
-  std::vector<exData> retData(shad::rt::numLocalities() * kNumIters);
-  std::vector<uint32_t> retSizes(shad::rt::numLocalities() * kNumIters, sizeof(exData));
-
-  shad::rt::Handle handle;
-  std::vector<exData> argv(shad::rt::numLocalities());
-  for (auto &loc : shad::rt::allLocalities()) {
-    uint32_t localityNumber = static_cast<uint32_t>(loc);
-    size_t value = kValue + static_cast<uint32_t>(loc);
-    exData data = {value, loc};
-    argv[static_cast<uint32_t>(loc)] = data;
-
-    for (size_t i = 0; i < kNumIters; i++) {
-      size_t idx = i * shad::rt::numLocalities() + localityNumber;
-      shad::rt::asyncExecuteAtWithRetBuff(handle, loc, asynIncrFunWithRetBuff, 
-                                     argv[static_cast<uint32_t>(loc)],
-                                     reinterpret_cast<uint8_t *>(&retData[idx]),
-                                     &retSizes[idx]);
-    }
-  }
-  ASSERT_FALSE(handle.IsNull());
-  shad::rt::waitForCompletion(handle);
-
-  for (auto &locality : shad::rt::allLocalities()) {
-    uint32_t localityNumber = static_cast<uint32_t>(locality);
-
-    for (size_t i = 0; i < kNumIters; ++i) {
-      size_t idx = i * shad::rt::numLocalities() + localityNumber;
-
-      ASSERT_EQ(retSizes[idx], sizeof(exData));
-      ASSERT_EQ(retData[idx].counter, kValue + localityNumber + 1);
-    }
-  }
-
-  for (auto &loc : shad::rt::allLocalities()) {
     shad::rt::executeAt(loc, check, nullptr, 0);
   }
 }

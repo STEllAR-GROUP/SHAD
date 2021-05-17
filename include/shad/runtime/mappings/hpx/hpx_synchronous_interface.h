@@ -108,6 +108,8 @@ struct SynchronousInterface<hpx_tag> {
        buffer_type(reinterpret_cast<std::uint8_t const*>(&args), sizeof(args),
                    buffer_type::reference),
       *resultSize);
+    
+    *resultSize = result.size();
 
     std::memcpy(resultBuffer, result.data(), result.size());
   }
@@ -137,6 +139,7 @@ struct SynchronousInterface<hpx_tag> {
         buffer_type(argsBuffer.get(), bufferSize, buffer_type::reference),
         *resultSize);
 
+    *resultSize = result.size();
     std::memcpy(resultBuffer, result.data(), result.size());
   }
 
