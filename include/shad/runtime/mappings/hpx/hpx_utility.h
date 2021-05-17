@@ -93,12 +93,13 @@ namespace detail {
           hpx::serialization::serialize_buffer<std::uint8_t> args,
           std::uint32_t size)
         {
-            hpx::serialization::serialize_buffer<std::uint8_t> result(size);
+            hpx::serialization::serialize_buffer<std::uint8_t> result(1000);
 
             reinterpret_cast<void (*)(T, std::uint8_t*, std::uint32_t*)>(f)(
                 std::move(*reinterpret_cast<std::decay_t<T>*>(args.data())),
                 result.data(), &size);
 
+            result.resize_norealloc(size);
             return result;
         }
     };
@@ -110,12 +111,13 @@ namespace detail {
           hpx::serialization::serialize_buffer<std::uint8_t> args,
           std::uint32_t size)
         {
-            hpx::serialization::serialize_buffer<std::uint8_t> result(size);
+            hpx::serialization::serialize_buffer<std::uint8_t> result(1000);
 
             reinterpret_cast<void (*)(const std::uint8_t *, const std::uint32_t,
                                       std::uint8_t*, std::uint32_t*)>(f)(
                 args.data(), args.size(), result.data(), &size);
 
+            result.resize_norealloc(size);
             return result;
         }
     };
@@ -270,13 +272,14 @@ namespace detail {
         {
             std::remove_reference_t<H> h;
 
-            hpx::serialization::serialize_buffer<std::uint8_t> result(size);
+            hpx::serialization::serialize_buffer<std::uint8_t> result(1000);
             
             reinterpret_cast<void (*)(H, T, uint8_t *, uint32_t *)>(f)(h,
                 *reinterpret_cast<std::decay_t<T>*>(args.data()), 
                 result.data(), &size);
 
             waitForCompletion(h);
+            result.resize_norealloc(size);
             return result;
 
         }
@@ -293,16 +296,13 @@ namespace detail {
         {
             std::remove_reference_t<H> h;
 
-            hpx::serialization::serialize_buffer<std::uint8_t> result(size);
-            //hpx::serialization::serialize_buffer<std::uint8_t> result(1000); // default
+            hpx::serialization::serialize_buffer<std::uint8_t> result(1000);
             
             reinterpret_cast<void (*)(H, const uint8_t *, const uint32_t, uint8_t *, 
                 uint32_t *)>(f)(h, args.data(), args.size(), result.data(), &size);
 
             waitForCompletion(h);
-
-            // result.resize(size);
-
+            result.resize_norealloc(size);
             return result;
         }
     };
