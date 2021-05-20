@@ -86,7 +86,6 @@ TEST_F(ForEachTest, ForEachOnAllWithStruct) {
         ASSERT_EQ(Counter, 11 * shad::rt::impl::getConcurrency());
       },
       false);
-
 }
 
 TEST_F(ForEachTest, ForEachOnAllWithBuffer) {
@@ -230,7 +229,7 @@ TEST_F(ForEachTest, AsyncForEachOnAllWithStruct) {
     shad::rt::asyncForEachOnAll(
         handle,
         [](shad::rt::Handle &handle, const TestStruct &args, size_t i) {
-         // ASSERT_FALSE(handle.IsNull());
+          ASSERT_FALSE(handle.IsNull());
           ASSERT_GE(i, 0);
           ASSERT_LT(
               i, shad::rt::numLocalities() * shad::rt::impl::getConcurrency());
@@ -241,7 +240,6 @@ TEST_F(ForEachTest, AsyncForEachOnAllWithStruct) {
         TestStruct{5, 5},
         shad::rt::numLocalities() * shad::rt::impl::getConcurrency());
 
-    ASSERT_FALSE(handle.IsNull());
     shad::rt::waitForCompletion(handle);
   }
 
@@ -256,7 +254,7 @@ TEST_F(ForEachTest, AsyncForEachOnAllWithStruct) {
     shad::rt::asyncForEachOnAll(
         handle,
         [](shad::rt::Handle &handle, const TestStruct &args, size_t i) {
-          //ASSERT_FALSE(handle.IsNull());
+          ASSERT_FALSE(handle.IsNull());
           ASSERT_GE(i, 0);
           ASSERT_LT(
               i, shad::rt::numLocalities() * shad::rt::impl::getConcurrency());
@@ -267,7 +265,6 @@ TEST_F(ForEachTest, AsyncForEachOnAllWithStruct) {
         TestStruct{5, 5},
         shad::rt::numLocalities() * shad::rt::impl::getConcurrency());
 
-    ASSERT_FALSE(handle.IsNull());
     shad::rt::waitForCompletion(handle);
   }
 
@@ -289,7 +286,7 @@ TEST_F(ForEachTest, AsyncForEachOnAllWithBuffer) {
         handle,
         [](shad::rt::Handle &handle, const uint8_t *input, const uint32_t size,
            size_t i) {
-          //ASSERT_FALSE(handle.IsNull());
+          ASSERT_FALSE(handle.IsNull());
           ASSERT_EQ(size, 2);
           ASSERT_GE(i, 0);
           ASSERT_LT(
@@ -301,7 +298,6 @@ TEST_F(ForEachTest, AsyncForEachOnAllWithBuffer) {
         buffer, 2,
         shad::rt::numLocalities() * shad::rt::impl::getConcurrency());
 
-    ASSERT_FALSE(handle.IsNull());
     shad::rt::waitForCompletion(handle);
   }
 
@@ -317,7 +313,7 @@ TEST_F(ForEachTest, AsyncForEachOnAllWithBuffer) {
         handle,
         [](shad::rt::Handle &handle, const uint8_t *input, const uint32_t size,
            size_t i) {
-          //ASSERT_FALSE(handle.IsNull());
+          ASSERT_FALSE(handle.IsNull());
           ASSERT_EQ(size, 2);
           ASSERT_GE(i, 0);
           ASSERT_LT(
@@ -329,7 +325,6 @@ TEST_F(ForEachTest, AsyncForEachOnAllWithBuffer) {
         buffer, 2,
         shad::rt::numLocalities() * shad::rt::impl::getConcurrency());
 
-    ASSERT_FALSE(handle.IsNull());
     shad::rt::waitForCompletion(handle);
   }
 
@@ -349,7 +344,7 @@ TEST_F(ForEachTest, AsyncForEachAtWithStruct) {
       shad::rt::asyncForEachAt(
           handle, locality,
           [](shad::rt::Handle &handle, const TestStruct &args, size_t i) {
-            //ASSERT_FALSE(handle.IsNull());
+            ASSERT_FALSE(handle.IsNull());
             ASSERT_GE(i, 0);
             ASSERT_LT(i, shad::rt::numLocalities() *
                              shad::rt::impl::getConcurrency());
@@ -360,7 +355,6 @@ TEST_F(ForEachTest, AsyncForEachAtWithStruct) {
           TestStruct{5, 5}, shad::rt::impl::getConcurrency());
     }
 
-    ASSERT_FALSE(handle.IsNull());
     shad::rt::waitForCompletion(handle);
   }
 
@@ -377,7 +371,7 @@ TEST_F(ForEachTest, AsyncForEachAtWithStruct) {
       shad::rt::asyncForEachAt(
           handle, locality,
           [](shad::rt::Handle &handle, const TestStruct &args, size_t i) {
-            //ASSERT_FALSE(handle.IsNull());
+            ASSERT_FALSE(handle.IsNull());
             ASSERT_GE(i, 0);
             ASSERT_LT(i, shad::rt::numLocalities() *
                              shad::rt::impl::getConcurrency());
@@ -388,7 +382,6 @@ TEST_F(ForEachTest, AsyncForEachAtWithStruct) {
           TestStruct{5, 5}, shad::rt::impl::getConcurrency());
     }
 
-    ASSERT_FALSE(handle.IsNull());
     shad::rt::waitForCompletion(handle);
   }
 
@@ -413,7 +406,7 @@ TEST_F(ForEachTest, AsyncForEachAtWithBuffer) {
           handle, locality,
           [](shad::rt::Handle &handle, const uint8_t *input,
              const uint32_t size, size_t i) {
-            //ASSERT_FALSE(handle.IsNull());
+            ASSERT_FALSE(handle.IsNull());
             ASSERT_EQ(size, 2);
             ASSERT_GE(i, 0);
             ASSERT_LT(i, shad::rt::impl::getConcurrency());
@@ -425,7 +418,6 @@ TEST_F(ForEachTest, AsyncForEachAtWithBuffer) {
           buffer, 2, shad::rt::impl::getConcurrency());
     }
 
-    ASSERT_FALSE(handle.IsNull());
     shad::rt::waitForCompletion(handle);
   }
 
@@ -455,7 +447,6 @@ TEST_F(ForEachTest, AsyncForEachAtWithBuffer) {
           buffer, 2, shad::rt::impl::getConcurrency());
     }
 
-    ASSERT_FALSE(handle.IsNull());
     shad::rt::waitForCompletion(handle);
   }
 
@@ -589,7 +580,6 @@ TEST_F(ForEachTest, AsyncZeroIterations) {
       },
       TestStruct{5, 5}, 0);
 
-  ASSERT_FALSE(handle.IsNull());
   shad::rt::waitForCompletion(handle);
 
   shad::rt::executeOnAll([](const bool &) { ASSERT_EQ(Counter, 0); }, false);
