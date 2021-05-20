@@ -233,7 +233,7 @@ namespace detail {
         static void call(std::size_t f,
             hpx::serialization::serialize_buffer<std::uint8_t> args)
         {
-            std::remove_reference_t<H> h;
+            std::remove_reference_t<H> h(HandleTrait<hpx_tag>::CreateNewHandle());
             
             reinterpret_cast<void (*)(H, T)>(f)(h,
                 *reinterpret_cast<std::decay_t<T>*>(args.data()));
@@ -250,7 +250,7 @@ namespace detail {
         static void call(std::size_t f,
             hpx::serialization::serialize_buffer<std::uint8_t> args)
         {
-            std::remove_reference_t<H> h;
+            std::remove_reference_t<H> h(HandleTrait<hpx_tag>::CreateNewHandle());
             
             reinterpret_cast<void (*)(H, const uint8_t *, const uint32_t)>(f)(h, 
                 args.data(), args.size());
@@ -270,7 +270,7 @@ namespace detail {
         static hpx::serialization::serialize_buffer<std::uint8_t> call(std::size_t f,
             hpx::serialization::serialize_buffer<std::uint8_t> args, std::uint32_t size)
         {
-            std::remove_reference_t<H> h;
+            std::remove_reference_t<H> h(HandleTrait<hpx_tag>::CreateNewHandle());
 
             hpx::serialization::serialize_buffer<std::uint8_t> result(1000);
             
@@ -294,7 +294,7 @@ namespace detail {
         static hpx::serialization::serialize_buffer<std::uint8_t> call(std::size_t f,
             hpx::serialization::serialize_buffer<std::uint8_t> args, std::uint32_t size)
         {
-            std::remove_reference_t<H> h;
+            std::remove_reference_t<H> h(HandleTrait<hpx_tag>::CreateNewHandle());
 
             hpx::serialization::serialize_buffer<std::uint8_t> result(1000);
             
@@ -320,7 +320,8 @@ namespace detail {
 
             hpx::serialization::serialize_buffer<std::uint8_t> result(size);
 
-            std::remove_reference_t<H> h;
+            std::remove_reference_t<H> h(HandleTrait<hpx_tag>::CreateNewHandle());
+
 
             reinterpret_cast<void (*)(H, T, R*, std::uint32_t*)>(f)(h,
                 *reinterpret_cast<std::decay_t<T>*>(args.data()),
@@ -346,7 +347,7 @@ namespace detail {
 
             hpx::serialization::serialize_buffer<std::uint8_t> result(size);
 
-            std::remove_reference_t<H> h;
+            std::remove_reference_t<H> h(HandleTrait<hpx_tag>::CreateNewHandle());
 
             reinterpret_cast<void (*)(H, const uint8_t *, const uint32_t, R*,
                 std::uint32_t*)>(f)(h, args.data(), args.size(),
@@ -366,7 +367,7 @@ namespace detail {
             hpx::serialization::serialize_buffer<std::uint8_t> args,
             std::size_t numIters)
         {        
-            std::remove_reference_t<H> h;
+            std::remove_reference_t<H> h(HandleTrait<hpx_tag>::CreateNewHandle());
             hpx::for_loop(hpx::execution::par, 0, numIters,
                   [&](std::size_t i) {
                       
@@ -388,7 +389,7 @@ namespace detail {
             hpx::serialization::serialize_buffer<std::uint8_t> args,
             std::size_t numIters)
         {        
-            std::remove_reference_t<H> h;
+            std::remove_reference_t<H> h(HandleTrait<hpx_tag>::CreateNewHandle());
             hpx::for_loop(hpx::execution::par, 0, numIters,
                 [&](std::size_t i) {
                     
