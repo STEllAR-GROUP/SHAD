@@ -48,7 +48,7 @@ struct HandleTrait<hpx_tag> {
   using ParameterTy = std::shared_ptr<task_group<>> &;
   using ConstParameterTy = const std::shared_ptr<task_group<>> &;
 
-  static void Init(ParameterTy H, ConstParameterTy V) {}
+  static void Init(ParameterTy H, ConstParameterTy V) {H=V;}
 
   static HandleTy NullValue() {
     return std::shared_ptr<task_group<>>(nullptr);
@@ -69,7 +69,10 @@ struct HandleTrait<hpx_tag> {
   }
 
   static void WaitFor(ParameterTy H) {
-    if (H == nullptr) return;
+    if (H == nullptr){
+      //std::cout << "WARNING: Called wait on a NULL handle" << std::endl;
+      return;
+    } 
     H->wait();
   }
 };
@@ -79,8 +82,8 @@ template <>
 struct LockTrait<hpx_tag> {
   using LockTy = hpx::lcos::local::spinlock;
 
-  static void lock(LockTy &L) { L.lock(); }
-  static void unlock(LockTy &L) { L.unlock(); }
+  static void lock(LockTy &L) { L.lock(); hpx::util::ignore_lock(&L); }
+  static void unlock(LockTy &L) { hpx::util::reset_ignored(&L); L.unlock(); }
 };
 
 template <>
