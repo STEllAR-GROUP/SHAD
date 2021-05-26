@@ -374,30 +374,30 @@ struct AsynchronousInterface<hpx_tag> {
     //                [=, &handle](std::size_t i) { fn(handle, args, i); });
     //}); // local case
 
-    using action_type = invoke_asyncForEachAt_action<decltype(fn)>;
+    using action_type = invoke_asyncForEachOnAll_action<decltype(fn)>;
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
     std::vector<hpx::id_type> localities = hpx::find_all_localities();
+    std::size_t last_loc_idx = localities.size() - 1;
+    std::size_t iters = (numIters + last_loc_idx ) / localities.size();   
+    std::size_t iters_last = numIters - iters * last_loc_idx;
+    
+    auto buffer_ = buffer_type(reinterpret_cast<const std::uint8_t*>(&args),
+                sizeof(args), buffer_type::reference);
 
-    std::size_t iters = numIters / hpx::get_num_localities(hpx::launch::sync);
-    std::size_t iters_last = numIters -
-        (iters * (hpx::get_num_localities(hpx::launch::sync) - 1));
-
-    for (std::size_t i = 0; i != localities.size() - 1; ++i)
+    for (std::size_t i = 0; i != last_loc_idx; ++i)
     {
         hpx::id_type const& loc = localities[i];
         handle.id_->run([=](){
             action_type()(loc, reinterpret_cast<std::size_t>(fn),
-                buffer_type(reinterpret_cast<const std::uint8_t*>(&args),
-                sizeof(args), buffer_type::reference), iters);
+                buffer_, iters * i, iters * (i + 1));
         });
     }
 
-    hpx::id_type const& loc = localities[localities.size() - 1];
+    hpx::id_type const& loc_last = localities[last_loc_idx];
     handle.id_->run([=](){
-        action_type()(loc, reinterpret_cast<std::size_t>(fn),
-            buffer_type(reinterpret_cast<const std::uint8_t*>(&args),
-            sizeof(args), buffer_type::reference), iters);
+        action_type()(loc_last, reinterpret_cast<std::size_t>(fn),
+            buffer_, iters * last_loc_idx, numIters);
     });
 
   }
@@ -422,30 +422,29 @@ struct AsynchronousInterface<hpx_tag> {
     //                });
     //}); //local case
 
-    using action_type = invoke_asyncForEachAt_buff_action<decltype(fn)>;
+    using action_type = invoke_asyncForEachOnAll_buff_action<decltype(fn)>;
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
-    std::vector<hpx::id_type> localities = hpx::find_all_localities();
-
-    std::size_t iters = numIters / hpx::get_num_localities(hpx::launch::sync);
-    std::size_t iters_last = numIters -
-        (iters * (hpx::get_num_localities(hpx::launch::sync) - 1));
+    std::vector<hpx::id_type> localities = hpx::find_all_localities();    
+    std::size_t last_loc_idx = localities.size() - 1;
+    std::size_t iters = (numIters + last_loc_idx ) / localities.size();    
+    std::size_t iters_last = numIters - iters * last_loc_idx;
     
-    for (std::size_t i = 0; i != localities.size() - 1; ++i)
+    auto buffer_ = buffer_type(argsBuffer.get(), bufferSize, buffer_type::reference);
+    
+    for (std::size_t i = 0; i !=last_loc_idx; ++i)
     {
         hpx::id_type const& loc = localities[i];
         handle.id_->run([=](){
             action_type()(loc, reinterpret_cast<std::size_t>(fn),
-                buffer_type(argsBuffer.get(), bufferSize, buffer_type::reference),
-                iters);
+                buffer_, iters * i, iters * (i + 1));
         });
     }
 
-    hpx::id_type const& loc = localities[localities.size() - 1];
+    hpx::id_type const& loc = localities[last_loc_idx];
     handle.id_->run([=](){
         action_type()(loc, reinterpret_cast<std::size_t>(fn),
-            buffer_type(argsBuffer.get(), bufferSize, buffer_type::reference),
-            iters);
+            buffer_, iters * last_loc_idx, numIters);
     });
 
   }
