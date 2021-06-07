@@ -29,7 +29,7 @@
 #include "shad/core/array.h"
 #include "shad/core/algorithm.h"
 #include "shad/util/measure.h"
-#include "shad/core/unordered_set.h"
+
 
 constexpr static size_t kArraySize = 4;
 using iterator = shad::impl::array<int, kArraySize>::array_iterator<int>;
@@ -82,12 +82,11 @@ std::pair<iterator, iterator> shad_minmax_algorithm(shad::array<int, kArraySize>
   return {min, max};
 }
 
-iterator shad_transform_algorithm(shad::array<int, kArraySize> &in){
-  auto iter = shad::transform(
+void shad_transform_algorithm(shad::array<int, kArraySize> &in){
+  shad::transform(
                     shad::distributed_parallel_tag{},
                     in.begin(), in.end(), in.begin(),
-                    [](int i){ return i++;});
-  return iter;
+                    [](int i){ return i+2;});
 }
 
 namespace shad {
@@ -131,12 +130,14 @@ int main(int argc, char *argv[]) {
     ? std::cout << "array contains an even number" << std::endl
     : std::cout << "array does not contain even numbers" << std::endl;
 
+
   // shad for_each algorithm
   execute_time = shad::measure<std::chrono::nanoseconds>::duration(
     [&](){shad_for_each_algorithm(in);});
   std::cout << "Array, using " << shad::rt::numLocalities() 
             << " localities, shad::for_each took " 
             << execute_time.count() << " nanoseconds" << std::endl;
+
 
   // shad minmax algorithm
   std::pair<iterator, iterator> min_max;
@@ -147,13 +148,14 @@ int main(int argc, char *argv[]) {
             << execute_time.count() << " nanoseconds (min = "
             << *min_max.first<< ", max = " << *min_max.second << " )" << std::endl;
 
+
   // shad transform algorithm
   execute_time = shad::measure<std::chrono::nanoseconds>::duration(
-    [&](){iter = shad_transform_algorithm(in);});
+    [&](){shad_transform_algorithm(in);});
   std::cout << "Array, using " << shad::rt::numLocalities() 
             << " localities, shad::transform took " 
             << execute_time.count() << " nanoseconds" << std::endl;
-  
+
   return 0;
 }
 
