@@ -31,7 +31,7 @@
 #include "shad/util/measure.h"
 
 
-constexpr static size_t kArraySize = 4;
+constexpr static size_t kArraySize = 1024;
 using iterator = shad::impl::array<int, kArraySize>::array_iterator<int>;
 
 void shad_generate_algorithm(shad::array<int, kArraySize> &in){
@@ -97,64 +97,63 @@ int main(int argc, char *argv[]) {
   shad::array<int, kArraySize> in;
 
   // shad fill algorithm
-  auto execute_time = shad::measure<std::chrono::nanoseconds>::duration(
+  auto execute_time = shad::measure<std::chrono::seconds>::duration(
     [&](){shad_fill_algorithm(in);});
   std::cout << "Array, using " << shad::rt::numLocalities() 
             << " localities, shad::fill took " 
-            << execute_time.count() << " nanoseconds" << std::endl;
+            << execute_time.count() << " seconds" << std::endl;
 
   // shad generate algorithm
-  execute_time = shad::measure<std::chrono::nanoseconds>::duration(
+  execute_time = shad::measure<std::chrono::seconds>::duration(
     [&](){shad_generate_algorithm(in);});
   std::cout << "Array, using " << shad::rt::numLocalities() 
             << " localities, shad::generate took " 
-            << execute_time.count() << " nanoseconds" << std::endl;
+            << execute_time.count() << " seconds" << std::endl;
 
   // shad count algorithm
   size_t counter;
-  execute_time = shad::measure<std::chrono::nanoseconds>::duration(
+  execute_time = shad::measure<std::chrono::seconds>::duration(
     [&](){counter = shad_count_algorithm(in);});
   std::cout << "Array, using " << shad::rt::numLocalities() 
             << " localities, shad::count took " 
-            << execute_time.count() << " nanoseconds (numbers of 0 = "
+            << execute_time.count() << " seconds (numbers of 0 = "
             << counter << " )" << std::endl;
 
   // shad find_if algorithm
   iterator iter;
-  execute_time = shad::measure<std::chrono::nanoseconds>::duration(
+  execute_time = shad::measure<std::chrono::seconds>::duration(
     [&](){iter = shad_find_if_algorithm(in);});
   std::cout << "Array, using " << shad::rt::numLocalities() 
             << " localities, shad::find_if took " 
-            << execute_time.count() << " nanoseconds, ";
+            << execute_time.count() << " seconds, ";
   (iter != in.end()) 
     ? std::cout << "array contains an even number" << std::endl
     : std::cout << "array does not contain even numbers" << std::endl;
 
 
   // shad for_each algorithm
-  execute_time = shad::measure<std::chrono::nanoseconds>::duration(
+  execute_time = shad::measure<std::chrono::seconds>::duration(
     [&](){shad_for_each_algorithm(in);});
   std::cout << "Array, using " << shad::rt::numLocalities() 
             << " localities, shad::for_each took " 
-            << execute_time.count() << " nanoseconds" << std::endl;
+            << execute_time.count() << " seconds" << std::endl;
 
 
   // shad minmax algorithm
   std::pair<iterator, iterator> min_max;
-  execute_time = shad::measure<std::chrono::nanoseconds>::duration(
+  execute_time = shad::measure<std::chrono::seconds>::duration(
     [&](){ min_max = shad_minmax_algorithm(in); });
   std::cout << "Array, using " << shad::rt::numLocalities() 
-            << " localities, shad::count took " 
-            << execute_time.count() << " nanoseconds (min = "
-            << *min_max.first<< ", max = " << *min_max.second << " )" << std::endl;
+            << " localities, shad::minmax took " 
+            << execute_time.count() << " seconds" << std::endl;
 
 
   // shad transform algorithm
-  execute_time = shad::measure<std::chrono::nanoseconds>::duration(
+  execute_time = shad::measure<std::chrono::seconds>::duration(
     [&](){shad_transform_algorithm(in);});
   std::cout << "Array, using " << shad::rt::numLocalities() 
             << " localities, shad::transform took " 
-            << execute_time.count() << " nanoseconds" << std::endl;
+            << execute_time.count() << " seconds" << std::endl;
 
   return 0;
 }
