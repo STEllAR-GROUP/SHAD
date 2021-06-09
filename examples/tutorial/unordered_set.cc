@@ -28,7 +28,7 @@
 #include "shad/util/measure.h"
 #include "shad/core/unordered_set.h"
 
-constexpr static size_t kSize = 1024;
+constexpr static size_t kSize = 2;
 using set_t = shad::Set<int>;
 using iterator = set_t::iterator;
 using value_type = set_t::value_type;
@@ -70,9 +70,11 @@ template<typename shad_inserter>
 void shad_transform_algorithm(shad::unordered_set<int> &in){
   shad::unordered_set<int> out;
   shad::transform(
+                  //shad::distributed_sequential_tag{},
                   shad::distributed_parallel_tag{},
                   in.begin(), in.end(), shad_inserter(out, out.begin()),
                   [](const value_type &i){ return i;});
+  for (auto v: out) std::cout << "after transform, out: " << v << std::endl;
 }
 
 namespace shad {
@@ -89,7 +91,7 @@ int main(int argc, char *argv[]) {
   }
   ins.wait();
   ins.flush();
-
+/***
   // shad minmax algorithm
   std::pair<iterator, iterator> min_max;
   auto execute_time = shad::measure<std::chrono::seconds>::duration(
@@ -132,10 +134,10 @@ int main(int argc, char *argv[]) {
             << execute_time.count() << " seconds, "
             << "and number divisible by 3: " << counter << std::endl;
 
-
+***/
   // shad transform algorithm
-  execute_time = shad::measure<std::chrono::seconds>::duration(
-    [&](){shad_transform_algorithm<shad_inserter_t>(set_);});
+  auto execute_time = shad::measure<std::chrono::seconds>::duration(
+    [&](){shad_transform_algorithm<shad_buffered_inserter_t>(set_);});
   std::cout << "Unordered set, using " << shad::rt::numLocalities() 
             << " localities, shad::transform took " 
             << execute_time.count() << " seconds" << std::endl;
