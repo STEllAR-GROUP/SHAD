@@ -30,7 +30,7 @@
 #include "shad/core/array.h"
 #include "shad/util/measure.h"
 
-constexpr static size_t kArraySize = 1024;
+constexpr static size_t kArraySize = 2;
 using array_t = shad::impl::array<int, kArraySize>;
 using iterator = array_t::iterator;
 

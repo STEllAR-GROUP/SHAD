@@ -28,7 +28,7 @@
 #include "shad/core/unordered_map.h"
 #include "shad/util/measure.h"
 
-constexpr static size_t kSize = 1024;
+constexpr static size_t kSize = 2;
 using hashmap_t =
     shad::Hashmap<int, int, shad::MemCmp<int>, shad::Updater<int>>;
 using iterator = hashmap_t::iterator;
@@ -87,6 +87,7 @@ int main(int argc, char *argv[]) {
   ins.wait();
   ins.flush();
 
+/***
   // shad minmax algorithm
   std::pair<iterator, iterator> min_max;
   auto execute_time = shad::measure<std::chrono::seconds>::duration(
@@ -130,10 +131,10 @@ int main(int argc, char *argv[]) {
   std::cout << "Unordered map, using " << shad::rt::numLocalities()
             << " localities, shad::count_if took " << execute_time.count()
             << " seconds, and number divisible by 4: " << counter << std::endl;
-
+***/
   // shad transform algorithm
-  execute_time = shad::measure<std::chrono::seconds>::duration(
-      [&]() { shad_transform_algorithm<shad_inserter_t>(map_); });
+  auto execute_time = shad::measure<std::chrono::seconds>::duration(
+      [&]() { shad_transform_algorithm<shad_buffered_inserter_t>(map_); });
   std::cout << "Unordered map, using " << shad::rt::numLocalities()
             << " localities, shad::transform took " << execute_time.count()
             << " seconds" << std::endl;

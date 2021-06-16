@@ -88,6 +88,8 @@ int main(int argc, char *argv[]) {
   ins.wait();
   ins.flush();
 
+/***
+
   // shad minmax algorithm
   std::pair<iterator, iterator> min_max;
   auto execute_time = shad::measure<std::chrono::seconds>::duration(
@@ -133,9 +135,9 @@ int main(int argc, char *argv[]) {
             << " localities, shad::count_if took " << execute_time.count()
             << " seconds, "
             << "and number divisible by 3: " << counter << std::endl;
-
+***/
   // shad transform algorithm
-  execute_time = shad::measure<std::chrono::seconds>::duration(
+  auto execute_time = shad::measure<std::chrono::seconds>::duration(
       [&]() { shad_transform_algorithm<shad_buffered_inserter_t>(set_); });
   std::cout << "Unordered set, using " << shad::rt::numLocalities()
             << " localities, shad::transform took " << execute_time.count()
