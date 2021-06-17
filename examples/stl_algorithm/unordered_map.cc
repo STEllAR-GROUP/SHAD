@@ -28,7 +28,7 @@
 #include "shad/core/unordered_map.h"
 #include "shad/util/measure.h"
 
-constexpr static size_t kSize = 1024;
+constexpr static size_t kSize = 128;
 using hashmap_t =
     shad::Hashmap<int, int, shad::MemCmp<int>, shad::Updater<int>>;
 using iterator = hashmap_t::iterator;
@@ -39,8 +39,8 @@ using shad_buffered_inserter_t =
 
 std::pair<iterator, iterator> shad_minmax_algorithm(
     shad::unordered_map<int, int> &in) {
-  auto res = shad::minmax_element(shad::distributed_parallel_tag{}, in.begin(),
-                                  in.end());
+  std::pair<iterator, iterator> res = shad::minmax_element(
+      shad::distributed_parallel_tag{}, in.begin(), in.end());
   return res;
 }
 
@@ -91,17 +91,15 @@ int main(int argc, char *argv[]) {
   std::pair<iterator, iterator> min_max;
   auto execute_time = shad::measure<std::chrono::seconds>::duration(
       [&]() { min_max = shad_minmax_algorithm(map_); });
-  std::cout << "Unordered map, using " << shad::rt::numLocalities()
-            << " localities, shad::count took " << execute_time.count()
-            << " seconds (min = " << (*min_max.first).second
-            << ", max = " << (*min_max.second).second << " )" << std::endl;
+  std::cout << "==> Using shad::count took " << execute_time.count()
+            << " seconds, min = " << (*min_max.first).second
+            << ", max = " << (*min_max.second).second << std::endl;
 
   // shad find_if algorithm
   iterator iter;
   execute_time = shad::measure<std::chrono::seconds>::duration(
       [&]() { iter = shad_find_if_algorithm(map_); });
-  std::cout << "Unordered map, using " << shad::rt::numLocalities()
-            << " localities, shad::find_if took " << execute_time.count()
+  std::cout << "==> Using shad::find_if took " << execute_time.count()
             << " seconds, ";
   (iter != map_.end())
       ? std::cout << "and this unordered map contains an even number"
@@ -113,8 +111,7 @@ int main(int argc, char *argv[]) {
   bool res;
   execute_time = shad::measure<std::chrono::seconds>::duration(
       [&]() { res = shad_any_of_algorithm(map_); });
-  std::cout << "Unordered map, using " << shad::rt::numLocalities()
-            << " localities, shad::any_of took " << execute_time.count()
+  std::cout << "==> Using shad::any_of took "  << execute_time.count()
             << " seconds, ";
   (res == true) ? std::cout << "and this unordered map contains at least one "
                                "number that is divisible by 7"
@@ -127,16 +124,13 @@ int main(int argc, char *argv[]) {
   size_t counter;
   execute_time = shad::measure<std::chrono::seconds>::duration(
       [&]() { counter = shad_count_if_algorithm(map_); });
-  std::cout << "Unordered map, using " << shad::rt::numLocalities()
-            << " localities, shad::count_if took " << execute_time.count()
-            << " seconds, "
-            << "and number divisible by 4: " << counter << std::endl;
+  std::cout << "==> Using shad::count_if took " << execute_time.count()
+            << " seconds, and number divisible by 4: " << counter << std::endl;
 
   // shad transform algorithm
   execute_time = shad::measure<std::chrono::seconds>::duration(
       [&]() { shad_transform_algorithm<shad_inserter_t>(map_); });
-  std::cout << "Unordered map, using " << shad::rt::numLocalities()
-            << " localities, shad::transform took " << execute_time.count()
+  std::cout << "==> Using shad::transform with insert_iterator, took " << execute_time.count()
             << " seconds" << std::endl;
 
   return 0;
