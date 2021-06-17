@@ -30,112 +30,57 @@
 #include "shad/core/array.h"
 #include "shad/util/measure.h"
 
-constexpr static size_t kArraySize = 1024;
-using array_t = shad::impl::array<int, kArraySize>;
-using iterator = array_t::iterator;
+namespace shad {
 
-void shad_generate_algorithm(shad::array<int, kArraySize> &in) {
-  shad::generate(shad::distributed_parallel_tag{}, in.begin(), in.end(), [=]() {
+int main(int argc, char *argv[]) {
+  // array
+  shad::array<int, 4> array_;
+
+  // shad fill algorithm
+  shad::fill(shad::distributed_parallel_tag{}, array_.begin(), array_.end(), 42);
+  std::cout << "==> After using shad::fill, array is " << std::endl;
+  for (auto v: array_) std::cout << v << "\n";
+
+
+  // shad generate algorithm
+  shad::generate(shad::distributed_parallel_tag{}, array_.begin(), array_.end(), [=]() {
     std::random_device rd;
     std::default_random_engine G(rd());
     std::uniform_int_distribution<int> dist(1, 10);
     return dist(G);
   });
-}
+  std::cout << "==> After using shad::generate, array is " << std::endl;
+  for (auto v: array_) std::cout << v << "\n";
 
-void shad_fill_algorithm(shad::array<int, kArraySize> &in) {
-  shad::fill(shad::distributed_parallel_tag{}, in.begin(), in.end(), 42);
-}
-
-size_t shad_count_algorithm(shad::array<int, kArraySize> &in) {
-  auto counter =
-      shad::count(shad::distributed_parallel_tag{}, in.begin(), in.end(), 1);
-  return counter;
-}
-
-iterator shad_find_if_algorithm(shad::array<int, kArraySize> &in) {
-  auto iter = shad::find_if(shad::distributed_parallel_tag{}, in.begin(),
-                            in.end(), [](int i) { return i % 2 == 0; });
-  return iter;
-}
-
-void shad_for_each_algorithm(shad::array<int, kArraySize> &in) {
-  shad::for_each(shad::distributed_parallel_tag{}, in.begin(), in.end(),
-                 [](int &i) { i++; });
-}
-
-std::pair<iterator, iterator> shad_minmax_algorithm(
-    shad::array<int, kArraySize> &in) {
-  std::pair<iterator, iterator> res = shad::minmax_element(
-      shad::distributed_parallel_tag{}, in.begin(), in.end());
-  return res;
-}
-
-void shad_transform_algorithm(shad::array<int, kArraySize> &in) {
-  shad::transform(shad::distributed_parallel_tag{}, in.begin(), in.end(),
-                  in.begin(), [](int i) { return i + 2; });
-}
-
-namespace shad {
-
-int main(int argc, char *argv[]) {
-  // array
-  shad::array<int, kArraySize> in;
-
-  // shad fill algorithm
-  auto execute_time = shad::measure<std::chrono::seconds>::duration(
-      [&]() { shad_fill_algorithm(in); });
-  std::cout << "Array, using " << shad::rt::numLocalities()
-            << " localities, shad::fill took " << execute_time.count()
-            << " seconds" << std::endl;
-
-  // shad generate algorithm
-  execute_time = shad::measure<std::chrono::seconds>::duration(
-      [&]() { shad_generate_algorithm(in); });
-  std::cout << "Array, using " << shad::rt::numLocalities()
-            << " localities, shad::generate took " << execute_time.count()
-            << " seconds" << std::endl;
 
   // shad count algorithm
-  size_t counter;
-  execute_time = shad::measure<std::chrono::seconds>::duration(
-      [&]() { counter = shad_count_algorithm(in); });
-  std::cout << "Array, using " << shad::rt::numLocalities()
-            << " localities, shad::count took " << execute_time.count()
-            << " seconds (numbers of 0 = " << counter << " )" << std::endl;
+  size_t counter =
+      shad::count(shad::distributed_parallel_tag{}, array_.begin(), array_.end(), 5);
+  std::cout << "==> After using shad::count, the counter of 5 is: " << counter << std::endl;
+
 
   // shad find_if algorithm
-  iterator iter;
-  execute_time = shad::measure<std::chrono::seconds>::duration(
-      [&]() { iter = shad_find_if_algorithm(in); });
-  std::cout << "Array, using " << shad::rt::numLocalities()
-            << " localities, shad::find_if took " << execute_time.count()
-            << " seconds, ";
-  (iter != in.end())
+  using iterator = shad::impl::array<int, 4>::iterator;
+  iterator iter = shad::find_if(shad::distributed_parallel_tag{}, array_.begin(),
+                            array_.end(), [](int i) { return i % 2 == 0; });
+  std::cout << "==> After using shad::find_if, ";
+  (iter != array_.end())
       ? std::cout << "array contains an even number" << std::endl
       : std::cout << "array does not contain even numbers" << std::endl;
 
-  // shad for_each algorithm
-  execute_time = shad::measure<std::chrono::seconds>::duration(
-      [&]() { shad_for_each_algorithm(in); });
-  std::cout << "Array, using " << shad::rt::numLocalities()
-            << " localities, shad::for_each took " << execute_time.count()
-            << " seconds" << std::endl;
 
   // shad minmax algorithm
-  std::pair<iterator, iterator> min_max;
-  execute_time = shad::measure<std::chrono::seconds>::duration(
-      [&]() { min_max = shad_minmax_algorithm(in); });
-  std::cout << "Array, using " << shad::rt::numLocalities()
-            << " localities, shad::minmax took " << execute_time.count()
-            << " seconds" << std::endl;
+  std::pair<iterator, iterator> min_max = shad::minmax_element(
+      shad::distributed_parallel_tag{}, array_.begin(), array_.end());
+  std::cout << "==> After using shad::minmax, min = " << *min_max.first 
+            << ", max= " << *min_max.second << std::endl;
+  
 
   // shad transform algorithm
-  execute_time = shad::measure<std::chrono::seconds>::duration(
-      [&]() { shad_transform_algorithm(in); });
-  std::cout << "Array, using " << shad::rt::numLocalities()
-            << " localities, shad::transform took " << execute_time.count()
-            << " seconds" << std::endl;
+  shad::transform(shad::distributed_parallel_tag{}, array_.begin(), array_.end(),
+                  array_.begin(), [](int i) { return i + 100; });
+  std::cout << "==> After using shad::transform, array is " << std::endl;
+  for (auto v: array_) std::cout << v << "\n";
 
   return 0;
 }
