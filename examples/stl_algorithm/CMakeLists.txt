@@ -1,4 +1,4 @@
-set(program array unordered_set unordered_map)
+set(program array unordered_set unordered_map same_handle diff_handle)
 
 foreach(p ${program})
   add_executable(${p} ${p}.cc)
