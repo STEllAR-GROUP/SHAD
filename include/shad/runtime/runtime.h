@@ -1248,6 +1248,7 @@ void asyncDma(Handle &handle,
 
 /// @brief Wait for completion of a set of tasks
 inline void waitForCompletion(Handle &handle) {
+  std::cout << "@@@@ -1 in runtime. waitForCompletion is called \n";
   impl::HandleTrait<TargetSystemTag>::WaitFor(handle.id_);
 }
 /// @}

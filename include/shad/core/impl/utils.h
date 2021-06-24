@@ -51,6 +51,7 @@ void wait_iterator(It &) {}
 
 template <typename T>
 void wait_iterator(shad::buffered_insert_iterator<T> &it) {
+  std::cout << "utils: will call buffered_insert_iterator.wait() \n";
   it.wait();
 }
 

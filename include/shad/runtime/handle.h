@@ -26,6 +26,7 @@
 #define INCLUDE_SHAD_RUNTIME_HANDLE_H_
 
 #include <type_traits>
+#include <iostream>
 
 #include "shad/config/config.h"
 #include "shad/runtime/mapping_traits.h"
@@ -47,9 +48,10 @@ class AsynchronousInterface;
 /// operations, via the waitForCompletion(Handle &handle) method.
 class Handle {
  public:
-  /// @brief Constructor.
-  /// Initialize the newly created object to a null value.
+//  /// @brief Constructor.
+//  /// Initialize the newly created object to a null value.
   Handle() {
+    std::cout << "@@@@ +1, in calss Handle, Handle() is called and will call Init \n";
     impl::HandleTrait<TargetSystemTag>::Init(
         id_, impl::HandleTrait<TargetSystemTag>::NullValue());
   }
@@ -87,7 +89,8 @@ class Handle {
   /// @brief Null Test.
   /// @return true if the Handle is null, false otherwise.
   bool IsNull() const {
-    return id_ == impl::HandleTrait<TargetSystemTag>::NullValue();
+    return impl::HandleTrait<TargetSystemTag>::Equal(
+        id_, impl::HandleTrait<TargetSystemTag>::NullValue());
   }
 
  private:

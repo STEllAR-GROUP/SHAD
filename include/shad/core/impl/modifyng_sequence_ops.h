@@ -315,6 +315,7 @@ ForwardIt2 dseq_kernel(std::false_type, ForwardIt1 first, ForwardIt1 last,
 template <class ForwardIt1, class ForwardIt2, class UnaryOperation>
 ForwardIt2 dpar_kernel(std::false_type, ForwardIt1 first, ForwardIt1 last,
                        ForwardIt2 d_first, UnaryOperation op) {
+  std::cout << "entering dpar_kernel (false type), which will call local_map_init \n";
   using itr_traits = distributed_iterator_traits<ForwardIt1>;
   using local_iterator_t = typename itr_traits::local_iterator_type;
 
@@ -327,7 +328,9 @@ ForwardIt2 dpar_kernel(std::false_type, ForwardIt1 first, ForwardIt1 last,
       // kernel
       [&](local_iterator_t b, local_iterator_t e) {
         auto res = std::transform(b, e, d_first, op);
+        std::cout << "--------- going to call wait in local_map_init \n";
         wait_iterator(res);
+        std::cout << "--------- done to call wait in local_map_init \n";
         return res;
       },
       // init value
@@ -335,6 +338,7 @@ ForwardIt2 dpar_kernel(std::false_type, ForwardIt1 first, ForwardIt1 last,
 
   // local reduce
   flush_iterator(map_res.back());
+  std::cout << "done dpar_kernel, which called local_map_init \n";
   return map_res.back();
 }
 
@@ -379,6 +383,7 @@ ForwardIt2 transform(distributed_parallel_tag&& policy, ForwardIt1 first1,
       d_first,
       // map arguments
       d_first, unary_op);
+  std::cout << "get map res from distributed_map_init \n";
 
   // reduce
   return map_res.back();
