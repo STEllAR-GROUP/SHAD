@@ -26,6 +26,7 @@
 #define INCLUDE_SHAD_RUNTIME_HANDLE_H_
 
 #include <type_traits>
+#include <iostream>
 
 #include "shad/config/config.h"
 #include "shad/runtime/mapping_traits.h"
@@ -50,6 +51,7 @@ class Handle {
 //  /// @brief Constructor.
 //  /// Initialize the newly created object to a null value.
   Handle() {
+    std::cout << "@@@@ +1, in calss Handle, Handle() is called and will call Init \n";
     impl::HandleTrait<TargetSystemTag>::Init(
         id_, impl::HandleTrait<TargetSystemTag>::NullValue());
   }

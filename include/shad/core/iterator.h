@@ -112,7 +112,9 @@ class buffered_insert_iterator : public insert_iterator<Container> {
   /// @param container The container into which the iterator inserts.
   /// @param iterator The position at which the iterator starts to insert.
   buffered_insert_iterator(Container& container, Iterator iterator)
-      : base_t(container, iterator) {}
+      : base_t(container, iterator) {
+        std::cout << "constructor of buffered_insert_iterator \n";
+      }
 
   /// @brief The assignment operator.
   ///
@@ -126,7 +128,9 @@ class buffered_insert_iterator : public insert_iterator<Container> {
     if (!this->local_container_ptr_ || this->locality_ != rt::thisLocality()) {
       this->locality_ = rt::thisLocality();
       this->local_container_ptr_ = Container::from_global_id(this->global_id_);
+      std::cout << "************* going to reset handle in buffered_insert_iterator, operator=  \n";
       handle_ = rt::Handle{};  // reset
+      std::cout << "************* done reset handle in buffered_insert_iterator, operator=  \n";
     }
     this->local_container_ptr_->buffered_async_insert(handle_, value);
     return *this;
@@ -146,6 +150,7 @@ class buffered_insert_iterator : public insert_iterator<Container> {
         this->locality_ == rt::thisLocality()) {
       this->local_container_ptr_->buffered_async_flush();
     }
+
   }
 
   buffered_insert_iterator& operator*() { return *this; }

@@ -234,6 +234,7 @@ template <class ExecutionPolicy, class ForwardIt1, class ForwardIt2,
 ForwardIt2 transform(ExecutionPolicy&& policy, ForwardIt1 first1,
                      ForwardIt1 last1, ForwardIt2 d_first,
                      UnaryOperation unary_op) {
+  std::cout << "entering transfrom \n";
   return impl::transform(std::forward<ExecutionPolicy>(policy), first1, last1,
                          d_first, unary_op);
 }

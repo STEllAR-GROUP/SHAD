@@ -25,6 +25,7 @@
 #ifndef INCLUDE_SHAD_RUNTIME_MAPPINGS_TBB_TBB_TRAITS_MAPPING_H_
 #define INCLUDE_SHAD_RUNTIME_MAPPINGS_TBB_TBB_TRAITS_MAPPING_H_
 
+#include <iostream>
 #include <cstdint>
 #include <limits>
 #include <memory>
@@ -49,7 +50,8 @@ struct HandleTrait<tbb_tag> {
   using ParameterTy = std::shared_ptr<tbb::task_group> &;
   using ConstParameterTy = const std::shared_ptr<tbb::task_group> &;
 
-  static void Init(ParameterTy H, ConstParameterTy V) {}
+  static void Init(ParameterTy H, ConstParameterTy V) {
+    std::cout << "tbb HandleTrait init, did nothing \n";}
 
   static HandleTy NullValue() {
     return std::shared_ptr<tbb::task_group>(nullptr);

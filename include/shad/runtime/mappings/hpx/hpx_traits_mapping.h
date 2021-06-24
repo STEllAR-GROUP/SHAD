@@ -41,6 +41,41 @@ namespace rt {
 namespace impl {
 
 struct hpx_tag {};
+/***
+template <>
+struct HandleTrait<hpx_tag> {
+  using hpx_task_goup = hpx::execution::experimental::task_group;
+  using HandleTy = std::shared_ptr<hpx_task_goup>;
+  using ParameterTy = std::shared_ptr<hpx_task_goup> &;
+  using ConstParameterTy = const std::shared_ptr<hpx_task_goup> &;
+
+  static void Init(ParameterTy H, ConstParameterTy V) {}
+
+  static HandleTy NullValue() {
+    return std::shared_ptr<hpx_task_goup>(nullptr);
+  }
+
+  static bool Equal(ConstParameterTy lhs, ConstParameterTy rhs) {
+    return lhs == rhs;
+  }
+
+  static std::string toString(ConstParameterTy H) { return ""; }
+
+  static uint64_t toUnsignedInt(ConstParameterTy H) {
+    return reinterpret_cast<uint64_t>(H.get());
+  }
+
+  static HandleTy CreateNewHandle() {
+    return std::shared_ptr<hpx_task_goup>(new hpx_task_goup());
+  }
+
+  static void WaitFor(ParameterTy H) {
+    if (H == nullptr) return;
+    H->wait();
+  }
+};
+***/
+
 
 template <>
 struct HandleTrait<hpx_tag> {
@@ -70,9 +105,10 @@ struct HandleTrait<hpx_tag> {
 
   static void WaitFor(ParameterTy H) {
     if (H == nullptr){
-      //std::cout << "WARNING: Called wait on a NULL handle" << std::endl;
+      std::cout << "@@@@ -1 wait is called for a empty handle \n"; 
       return;
-    } 
+    }
+    std::cout << "@@@@ -1 wait is called \n"; 
     H->wait();
   }
 };

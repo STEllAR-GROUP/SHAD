@@ -20,11 +20,11 @@ struct exData {
 };
 
 static exData globalData = {0, shad::rt::Locality(), 0ul};
-static const unsigned kNumIters = 1;
 static const size_t kValue = 3;
 
 namespace detail{
   static void async_2(shad::rt::Handle & /*unused*/, const exData &data) {
+    std::cout << "in async_2: ";
     __sync_fetch_and_add(&globalData.counter, data.counter);
     globalData.locality = data.locality;
   };
@@ -36,10 +36,11 @@ static void check(const uint8_t * /*unused*/, const uint32_t /*unused*/) {
   //          << std::endl;
   assert(globalData.locality == shad::rt::thisLocality());
   assert(globalData.counter ==
-    (kValue + static_cast<uint32_t>(globalData.locality)) * kNumIters);
+    (kValue + static_cast<uint32_t>(globalData.locality)));
 };
 
 static void async_1(shad::rt::Handle & handle, const exData &data) {
+  std::cout << "in async_1: ";
   auto loc = shad::rt::thisLocality();
   shad::rt::asyncExecuteAt(handle, loc, detail::async_2, data);
 };
@@ -52,11 +53,8 @@ int main(int argc, char *argv[]) {
   auto loc = shad::rt::thisLocality();
   size_t value = kValue + static_cast<uint32_t>(loc);
   exData data = {value, loc};
-
-  for (size_t i = 0; i < kNumIters; i++) {
-    shad::rt::asyncExecuteAt(handle, loc, async_1, data);
-  }
-  
+  std::cout << "going to call async_1: ";
+  shad::rt::asyncExecuteAt(handle, loc, async_1, data);
 
   shad::rt::waitForCompletion(handle);
   // check

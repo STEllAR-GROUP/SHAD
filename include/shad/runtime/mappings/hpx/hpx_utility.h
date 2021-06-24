@@ -135,9 +135,9 @@ namespace detail {
 
             hpx::serialization::serialize_buffer<std::uint8_t> result(size);
 
-            reinterpret_cast<void (*)(T, R*, std::uint32_t*)>(f)(
+            reinterpret_cast<void (*)(T, R*)>(f)(
                 std::move(*reinterpret_cast<std::decay_t<T>*>(args.data())),
-                reinterpret_cast<R*>(result.data()), &size);
+                reinterpret_cast<R*>(result.data()));
 
             return result;
         }
@@ -157,9 +157,8 @@ namespace detail {
 
             hpx::serialization::serialize_buffer<std::uint8_t> result(size);
 
-            reinterpret_cast<void (*)(const uint8_t *, const uint32_t, R*,
-                std::uint32_t*)>(f)(args.data(), args.size(),
-                reinterpret_cast<R*>(result.data()), &size);
+            reinterpret_cast<void (*)(const uint8_t *, const uint32_t, R*)>(f)(
+                args.data(), args.size(), reinterpret_cast<R*>(result.data()));
 
             return result;
         }
@@ -352,15 +351,20 @@ namespace detail {
             std::uint32_t size = sizeof(R);
 
             hpx::serialization::serialize_buffer<std::uint8_t> result(size);
+            
 
             std::remove_reference_t<H> h(HandleTrait<hpx_tag>::CreateNewHandle());
-
-
-            reinterpret_cast<void (*)(H, T, R*, std::uint32_t*)>(f)(h,
-                *reinterpret_cast<std::decay_t<T>*>(args.data()),
-                reinterpret_cast<R*>(result.data()), &size);
+            std::cout << "@@@@ +1, create a handle via hpx_utility \n";
             
+
+
+            reinterpret_cast<void (*)(H, T, R*)>(f)(h,
+                *reinterpret_cast<std::decay_t<T>*>(args.data()),
+                reinterpret_cast<R*>(result.data()));
+            
+            std::cout << "going to wait a handle via hpx_utility \n";
             waitForCompletion(h);
+            std::cout << "done wait a handle via hpx_utility \n";
 
             return result;
         }
@@ -382,9 +386,8 @@ namespace detail {
 
             std::remove_reference_t<H> h(HandleTrait<hpx_tag>::CreateNewHandle());
 
-            reinterpret_cast<void (*)(H, const uint8_t *, const uint32_t, R*,
-                std::uint32_t*)>(f)(h, args.data(), args.size(),
-                reinterpret_cast<R*>(result.data()), &size);
+            reinterpret_cast<void (*)(H, const uint8_t *, const uint32_t, R*)>(f)(
+                h, args.data(), args.size(), reinterpret_cast<R*>(result.data()));
 
             waitForCompletion(h);
             return result;

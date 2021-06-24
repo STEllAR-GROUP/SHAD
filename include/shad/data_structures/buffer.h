@@ -96,6 +96,7 @@ class Buffer {
   };
 
   void FlushBuffer() {
+    std::cout << "entering FlushBuffer \n";
     if (size_ == 0) return;
     FlushArgs args = {data_, size_, oid_};
     auto InsertBufferLambda = [](const FlushArgs& args) {
@@ -106,6 +107,7 @@ class Buffer {
     };
     rt::executeAt(tgtLoc_, InsertBufferLambda, args);
     size_ = 0;
+    std::cout << "done FlushBuffer \n";
   }
 
   void AsyncFlushBuffer(rt::Handle& handle) {
@@ -205,6 +207,7 @@ class BuffersVector {
   }
 
   void FlushAll() {
+    std::cout << "in FlushAll, will call buffer.FlushBuffer() in for loop \n";
     for (auto& buffer : buffers_) {
       buffer.FlushBuffer();
     }

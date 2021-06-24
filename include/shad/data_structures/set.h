@@ -121,7 +121,9 @@ class Set : public AbstractDataStructure<Set<T, ELEM_COMPARE>> {
   void BufferedAsyncInsert(rt::Handle& handle, const T& element);
 
   /// @brief Finalize method for buffered insertions.
-  void WaitForBufferedInsert() { buffers_.FlushAll(); }
+  void WaitForBufferedInsert() { 
+    std::cout << "in WaitForBufferedInsert, will call buffers_.FlushAll() \n";
+    buffers_.FlushAll(); }
   /// @brief Remove an element from the set.
   /// @param[in] element the element.
   void Erase(const T& element);
@@ -240,7 +242,9 @@ class Set : public AbstractDataStructure<Set<T, ELEM_COMPARE>> {
 
   void buffered_async_wait(rt::Handle& h) { rt::waitForCompletion(h); }
 
-  void buffered_async_flush() { WaitForBufferedInsert(); }
+  void buffered_async_flush() { 
+    std::cout << "in buffered_async_flush, will call WaitForBufferedInsert \n";
+    WaitForBufferedInsert(); }
 
  private:
   ObjectID oid_;

@@ -49,6 +49,7 @@ template <size_t i, size_t N>
 struct Apply {
   template <typename F, typename T, typename... A>
   static inline auto apply(F&& f, T&& t, A&&... a) {
+    std::cout << "222 apply \n";
     return Apply<i, N - 1>::apply(::std::forward<F>(f), ::std::forward<T>(t),
                                   ::std::get<N - 1>(::std::forward<T>(t)),
                                   ::std::forward<A>(a)...);
@@ -59,12 +60,14 @@ template <size_t i>
 struct Apply<i, i> {
   template <typename F, typename T, typename... A>
   static inline auto apply(F&& f, T&&, A&&... a) {
+    std::cout << "333 apply \n";
     return ::std::forward<F>(f)(::std::forward<A>(a)...);
   }
 };
 
 template <size_t i, typename F, typename T>
 inline auto apply_from(F&& f, T&& t) {
+  std::cout << "111 apply \n";
   return Apply<i, ::std::tuple_size<::std::decay_t<T>>::value>::apply(
       ::std::forward<F>(f), ::std::forward<T>(t));
 }
@@ -194,6 +197,7 @@ distributed_map_init(
     const typename std::result_of<MapF&(ForwardIt, ForwardIt, Args&&...)>::type&
         init,
     Args&&... args) {
+  std::cout << "entering distributed_map_init, " << std::endl;
   using itr_traits = distributed_iterator_traits<ForwardIt>;
   using mapped_t =
       typename std::result_of<MapF&(ForwardIt, ForwardIt, Args && ...)>::type;
@@ -204,7 +208,9 @@ distributed_map_init(
 
   auto localities = itr_traits::localities(first, last);
   size_t i = 0;
+  std::cout << " ^^^^^^^^^^^^^^ going to create handle for asyncExecuteAtWithRet \n";
   rt::Handle h;
+  std::cout << " ^^^^^^^^^^^^^^ done create handle for asyncExecuteAtWithRet \n";
   auto d_args = std::make_tuple(map_kernel, first, last, args...);
   optional_vector<mapped_t> opt_res(localities.size(), init);
   for (auto locality = localities.begin(), end = localities.end();
@@ -217,15 +223,19 @@ distributed_map_init(
           auto lrange = itr_traits::local_range(first, last);
           if (lrange.begin() != lrange.end()) {
             result->valid = true;
+            std::cout << "entering apply_from \n";
             result->value = apply_from<1>(
                 ::std::get<0>(d_args), ::std::forward<typeof(d_args)>(d_args));
+            std::cout << "done apply_from \n";
           } else {
             result->valid = false;
           }
         },
         d_args, &opt_res.data[i]);
   }
+  std::cout << " %%%%%%%%%%%%%%% going to wait handle for asyncExecuteAtWithRet \n";
   rt::waitForCompletion(h);
+  std::cout << " %%%%%%%%%%%%%%% done wait handle for asyncExecuteAtWithRet \n";
   std::vector<mapped_t> res;
   for (auto& x : opt_res.data)
     if (x.valid) res.push_back(x.value);
@@ -238,6 +248,7 @@ std::vector<
     typename std::result_of<MapF&(ForwardIt, ForwardIt, Args&&...)>::type>
 distributed_map(ForwardIt first, ForwardIt last, MapF&& map_kernel,
                 Args&&... args) {
+  std::cout << "entering distributed_map \n";
   using itr_traits = distributed_iterator_traits<ForwardIt>;
   using mapped_t =
       typename std::result_of<MapF&(ForwardIt, ForwardIt, Args && ...)>::type;
@@ -289,6 +300,7 @@ std::vector<typename std::result_of<MapF&(ForwardIt, ForwardIt)>::type>
 local_map_init(
     ForwardIt first, ForwardIt last, MapF&& map_kernel,
     const typename std::result_of<MapF&(ForwardIt, ForwardIt)>::type& init) {
+  std::cout << "entering local_map_init \n";
   using mapped_t = typename std::result_of<MapF&(ForwardIt, ForwardIt)>::type;
   static_assert(
       !std::is_same<mapped_t, bool>::value,
@@ -314,6 +326,8 @@ local_map_init(
         },
         map_args, parts.size());
   }
+
+  std::cout << "done local_map_init \n";
 
   return map_res;
 }
