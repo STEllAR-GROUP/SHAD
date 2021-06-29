@@ -197,7 +197,9 @@ struct AsynchronousInterface<hpx_tag> {
         buffer_type res = action_type()(
             id, reinterpret_cast<std::size_t>(fn), 
             buffer_type(reinterpret_cast<const std::uint8_t*>(&args), 
-            sizeof(args), buffer_type::reference));
+                        sizeof(args), buffer_type::reference),
+            buffer_type(reinterpret_cast<std::uint8_t*>(result), 
+                        sizeof(ResT), buffer_type::reference));
 
         std::memcpy(reinterpret_cast<uint8_t *>(result), res.data(), res.size());
     });
@@ -232,7 +234,9 @@ struct AsynchronousInterface<hpx_tag> {
     handle.id_->run([=]() {
         buffer_type res = action_type()(
             id, reinterpret_cast<std::size_t>(fn), 
-            buffer_type(argsBuffer.get(), bufferSize, buffer_type::reference));
+            buffer_type(argsBuffer.get(), bufferSize, buffer_type::reference),
+            buffer_type(reinterpret_cast<std::uint8_t*>(result), 
+                        sizeof(ResT), buffer_type::reference));
 
         std::memcpy(reinterpret_cast<uint8_t *>(result), res.data(), res.size());
     });
