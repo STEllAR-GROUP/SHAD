@@ -117,7 +117,6 @@ struct HandleTrait<hpx_tag> {
 template <>
 struct LockTrait<hpx_tag> {
   using LockTy = hpx::lcos::local::spinlock;
-
   static void lock(LockTy &L) { L.lock(); hpx::util::ignore_lock(&L); }
   static void unlock(LockTy &L) { hpx::util::reset_ignored(&L); L.unlock(); }
 };

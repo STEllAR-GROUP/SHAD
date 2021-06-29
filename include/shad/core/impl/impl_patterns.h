@@ -226,7 +226,8 @@ distributed_map_init(
             std::cout << "entering apply_from \n";
             result->value = apply_from<1>(
                 ::std::get<0>(d_args), ::std::forward<typeof(d_args)>(d_args));
-            std::cout << "done apply_from \n";
+            std::cout << "done apply_from, and sizeof(R): " << sizeof(opt_mapped_t)
+                      << std::endl;
           } else {
             result->valid = false;
           }

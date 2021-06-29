@@ -349,6 +349,7 @@ namespace detail {
           hpx::serialization::serialize_buffer<std::uint8_t> args)
         {
             std::uint32_t size = sizeof(R);
+            std::cout << "sizeof(R): " << size << std::endl;
 
             hpx::serialization::serialize_buffer<std::uint8_t> result(size);
             

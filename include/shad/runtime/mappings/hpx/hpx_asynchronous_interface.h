@@ -198,9 +198,14 @@ struct AsynchronousInterface<hpx_tag> {
             id, reinterpret_cast<std::size_t>(fn), 
             buffer_type(reinterpret_cast<const std::uint8_t*>(&args), 
             sizeof(args), buffer_type::reference));
+        
+        std::cout << "get res and going to memcpy, size of Result: " << res.size() << std::endl;
 
         std::memcpy(reinterpret_cast<uint8_t *>(result), res.data(), res.size());
     });
+
+
+
 
   }
 
