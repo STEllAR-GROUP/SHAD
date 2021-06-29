@@ -129,12 +129,9 @@ namespace detail {
     {
         static hpx::serialization::serialize_buffer<std::uint8_t> call(
           std::size_t f,
+          hpx::serialization::serialize_buffer<std::uint8_t> result,
           hpx::serialization::serialize_buffer<std::uint8_t> args)
         {
-            std::uint32_t size = sizeof(R);
-
-            hpx::serialization::serialize_buffer<std::uint8_t> result(size);
-
             reinterpret_cast<void (*)(T, R*)>(f)(
                 std::move(*reinterpret_cast<std::decay_t<T>*>(args.data())),
                 reinterpret_cast<R*>(result.data()));
@@ -151,12 +148,9 @@ namespace detail {
     {
         static hpx::serialization::serialize_buffer<std::uint8_t> call(
           std::size_t f,
+          hpx::serialization::serialize_buffer<std::uint8_t> result,
           hpx::serialization::serialize_buffer<std::uint8_t> args)
         {
-            std::uint32_t size = sizeof(R);
-
-            hpx::serialization::serialize_buffer<std::uint8_t> result(size);
-
             reinterpret_cast<void (*)(const uint8_t *, const uint32_t, R*)>(f)(
                 args.data(), args.size(), reinterpret_cast<R*>(result.data()));
 
@@ -346,19 +340,12 @@ namespace detail {
     {
         static hpx::serialization::serialize_buffer<std::uint8_t> call(
           std::size_t f,
+          hpx::serialization::serialize_buffer<std::uint8_t> result,
           hpx::serialization::serialize_buffer<std::uint8_t> args)
         {
-            std::uint32_t size = sizeof(R);
-            std::cout << "sizeof(R): " << size << std::endl;
-
-            hpx::serialization::serialize_buffer<std::uint8_t> result(size);
-            
-
             std::remove_reference_t<H> h(HandleTrait<hpx_tag>::CreateNewHandle());
             std::cout << "@@@@ +1, create a handle via hpx_utility \n";
             
-
-
             reinterpret_cast<void (*)(H, T, R*)>(f)(h,
                 *reinterpret_cast<std::decay_t<T>*>(args.data()),
                 reinterpret_cast<R*>(result.data()));
@@ -379,12 +366,9 @@ namespace detail {
     {
         static hpx::serialization::serialize_buffer<std::uint8_t> call(
           std::size_t f,
+          hpx::serialization::serialize_buffer<std::uint8_t> result,
           hpx::serialization::serialize_buffer<std::uint8_t> args)
         {
-            std::uint32_t size = sizeof(R);
-
-            hpx::serialization::serialize_buffer<std::uint8_t> result(size);
-
             std::remove_reference_t<H> h(HandleTrait<hpx_tag>::CreateNewHandle());
 
             reinterpret_cast<void (*)(H, const uint8_t *, const uint32_t, R*)>(f)(
@@ -542,6 +526,7 @@ template <typename R, typename T>
 struct invoke_executeAtWithRet_action<void (*)(T, R*)>
   : ::hpx::actions::action<
         hpx::serialization::serialize_buffer<std::uint8_t>(*)(std::size_t,
+            hpx::serialization::serialize_buffer<std::uint8_t>,
             hpx::serialization::serialize_buffer<std::uint8_t>),
         &detail::invoke_executeAtWithRet<
             void (*)(T, R*)>::call,
@@ -556,6 +541,7 @@ struct invoke_executeAtWithRet_buff_action<void (*)(const uint8_t *,
                                                     const uint32_t, R*)>
   : ::hpx::actions::action<
         hpx::serialization::serialize_buffer<std::uint8_t>(*)(std::size_t,
+            hpx::serialization::serialize_buffer<std::uint8_t>,
             hpx::serialization::serialize_buffer<std::uint8_t>),
         &detail::invoke_executeAtWithRet_buff<
             void (*)(const uint8_t *, const uint32_t, R*)>::call,
@@ -690,6 +676,7 @@ template <typename R, typename T, typename H>
 struct invoke_asyncExecuteAtWithRet_action<void (*)(H, T, R*)>
   : ::hpx::actions::action<
         hpx::serialization::serialize_buffer<std::uint8_t>(*)(std::size_t,
+        hpx::serialization::serialize_buffer<std::uint8_t>,
             hpx::serialization::serialize_buffer<std::uint8_t>),
         &detail::invoke_asyncExecuteAtWithRet<
             void (*)(H, T, R*)>::call,
@@ -704,6 +691,7 @@ struct invoke_asyncExecuteAtWithRet_buff_action<void (*)(H, const uint8_t *,
                                                     const uint32_t, R*)>
   : ::hpx::actions::action<
         hpx::serialization::serialize_buffer<std::uint8_t>(*)(std::size_t,
+            hpx::serialization::serialize_buffer<std::uint8_t>,
             hpx::serialization::serialize_buffer<std::uint8_t>),
         &detail::invoke_asyncExecuteAtWithRet_buff<
             void (*)(H, const uint8_t *, const uint32_t, R*)>::call,
