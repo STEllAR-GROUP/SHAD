@@ -47,8 +47,8 @@ class AsynchronousInterface;
 /// operations, via the waitForCompletion(Handle &handle) method.
 class Handle {
  public:
-//  /// @brief Constructor.
-//  /// Initialize the newly created object to a null value.
+  /// @brief Constructor.
+  /// Initialize the newly created object to a null value.
   Handle() {
     impl::HandleTrait<TargetSystemTag>::Init(
         id_, impl::HandleTrait<TargetSystemTag>::NullValue());

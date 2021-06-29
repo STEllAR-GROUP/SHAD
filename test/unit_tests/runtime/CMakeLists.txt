@@ -1,5 +1,4 @@
 set(tests execute_at_test execute_on_all_test for_each_test rdma_test) 
-#hpx_cout_test hpx_future_test
 
 foreach(t ${tests})
   add_executable(${t} ${t}.cc)
@@ -13,6 +12,5 @@ foreach(t ${tests})
   else()
     target_link_libraries(${t} ${SHAD_RUNTIME_LIB} runtime shadtest_main)
   endif()
-  #target_link_libraries(${t} ${SHAD_RUNTIME_LIB} runtime shadtest_main)
   add_test(NAME ${t} COMMAND ${SHAD_TEST_COMMAND} $<TARGET_FILE:${t}>)
 endforeach(t)
