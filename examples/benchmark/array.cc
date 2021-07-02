@@ -30,15 +30,21 @@
 #include "shad/core/array.h"
 #include "shad/util/measure.h"
 
-constexpr int RUN_TIMES = 2;
+constexpr int repetitions = 2;
 constexpr static size_t kArraySize = 1000000;
 using array_t = shad::impl::array<int, kArraySize>;
 using iterator = array_t::iterator;
 
+void SetUp(shad::array<int, kArraySize> &in) {
+    for (size_t i = 0; i < kArraySize; i++) {
+      in[i] = i + 1;
+    }
+}
+
 template <typename ExecutionPolicy>
 void shad_fill_algorithm(ExecutionPolicy &&policy, 
                          shad::array<int, kArraySize> &in) {
-  for(int i = 0; i < RUN_TIMES; ++i)
+  for(int i = 0; i < repetitions; ++i)
   {
     shad::fill(std::forward<ExecutionPolicy>(policy), in.begin(), in.end(), 42);
   }
@@ -47,7 +53,7 @@ void shad_fill_algorithm(ExecutionPolicy &&policy,
 template <typename ExecutionPolicy>
 void shad_generate_algorithm(ExecutionPolicy &&policy,
                              shad::array<int, kArraySize> &in) {
-  for(int i = 0; i < RUN_TIMES; ++i)
+  for(int i = 0; i < repetitions; ++i)
   {
     shad::generate(std::forward<ExecutionPolicy>(policy), in.begin(), in.end(), 
                    [=]() {
@@ -62,26 +68,17 @@ void shad_generate_algorithm(ExecutionPolicy &&policy,
 template <typename ExecutionPolicy>
 void shad_count_algorithm(ExecutionPolicy &&policy,
                           shad::array<int, kArraySize> &in) {
-  for(int i = 0; i < RUN_TIMES; ++i)
+  for(int i = 0; i < repetitions; ++i)
   {
     shad::count(std::forward<ExecutionPolicy>(policy), in.begin(), in.end(), 6);
   }
 }
 
-template <typename ExecutionPolicy>
-void shad_find_if_algorithm(ExecutionPolicy &&policy,
-                            shad::array<int, kArraySize> &in) {
-  for(int i = 0; i < RUN_TIMES; ++i)
-  {
-    shad::find_if(std::forward<ExecutionPolicy>(policy), in.begin(),
-                  in.end(), [](int i) { return i % 2 == 0; });
-  }
-}
 
 template <typename ExecutionPolicy>
 void shad_for_each_algorithm(ExecutionPolicy &&policy,
                             shad::array<int, kArraySize> &in) {
-  for(int i = 0; i < RUN_TIMES; ++i)
+  for(int i = 0; i < repetitions; ++i)
   {
     shad::for_each(std::forward<ExecutionPolicy>(policy), in.begin(), in.end(),
                    [](int &i) { i++; });
@@ -91,7 +88,7 @@ void shad_for_each_algorithm(ExecutionPolicy &&policy,
 template <typename ExecutionPolicy>
 void shad_minmax_algorithm(ExecutionPolicy &&policy,
                             shad::array<int, kArraySize> &in) {
-  for(int i = 0; i < RUN_TIMES; ++i)
+  for(int i = 0; i < repetitions; ++i)
   {
     shad::minmax_element(std::forward<ExecutionPolicy>(policy), in.begin(),
                          in.end());
@@ -101,7 +98,7 @@ void shad_minmax_algorithm(ExecutionPolicy &&policy,
 template <typename ExecutionPolicy>
 void shad_transform_algorithm(ExecutionPolicy &&policy,
                             shad::array<int, kArraySize> &in) {
-  for(int i = 0; i < RUN_TIMES; ++i)
+  for(int i = 0; i < repetitions; ++i)
   {
     shad::transform(std::forward<ExecutionPolicy>(policy), in.begin(), in.end(),
                     in.begin(), [](int i) { return i + 2; });
@@ -117,111 +114,103 @@ int main(int argc, char *argv[]) {
   std::cout << "shad::array, size of " << kArraySize 
             << ", using " << shad::rt::numLocalities() 
             << " localities, running each shad STL algorithm for " 
-            << RUN_TIMES << " times: \n";
+            << repetitions << " times: \n";
 
   // shad fill algorithm 
   // using distributed_sequential_tag
   {
+    SetUp(in);
     auto execute_time = shad::measure<std::chrono::seconds>::duration(
       [&]() {shad_fill_algorithm(shad::distributed_sequential_tag{},in);});
     std::cout << "shad::fill with sequential policy takes " 
-              << execute_time.count() << " seconds \n";
+              << (execute_time.count()/repetitions) << " seconds \n";
   }
 
     // using distributed_parallel_tag
   {
+    SetUp(in);
     auto execute_time = shad::measure<std::chrono::seconds>::duration(
       [&]() {shad_fill_algorithm(shad::distributed_parallel_tag{},in);});
     std::cout << "shad::fill with parallel policy takes " 
-              << execute_time.count() << " seconds \n"; 
+              << (execute_time.count()/repetitions) << " seconds \n"; 
   }
 
 
   // shad generate algorithm 
   // using distributed_sequential_tag
   {
+    SetUp(in);
     auto execute_time = shad::measure<std::chrono::seconds>::duration(
       [&]() {shad_generate_algorithm(shad::distributed_sequential_tag{},in);});
     std::cout << "shad::generate with sequential policy takes "
-              << execute_time.count() << " seconds \n"; 
+              << (execute_time.count()/repetitions) << " seconds \n"; 
   }
 
   // using distributed_parallel_tag
   {
+    SetUp(in);
     auto execute_time = shad::measure<std::chrono::seconds>::duration(
       [&]() {shad_generate_algorithm(shad::distributed_parallel_tag{}, in);});
     std::cout << "shad::generate with parallel policy takes "
-             << execute_time.count() << " seconds \n"; 
+             << (execute_time.count()/repetitions) << " seconds \n"; 
   }
 
 
   // shad count algorithm 
   // using distributed_sequential_tag
   {
+    SetUp(in);
     auto execute_time = shad::measure<std::chrono::seconds>::duration(
       [&]() {shad_count_algorithm(shad::distributed_sequential_tag{},in);});
     std::cout << "shad::count with sequential policy takes " 
-              << execute_time.count() << " seconds \n"; 
+              << (execute_time.count()/repetitions) << " seconds \n"; 
   }
 
   // using distributed_parallel_tag
   {
+    SetUp(in);
     auto execute_time = shad::measure<std::chrono::seconds>::duration(
       [&]() {shad_count_algorithm(shad::distributed_parallel_tag{}, in);});
     std::cout << "shad::count with parallel policy takes " 
-              << execute_time.count() << " seconds \n"; 
-  }
-
-
-  // shad find_if algorithm 
-  // using distributed_sequential_tag
-  {
-    auto execute_time = shad::measure<std::chrono::seconds>::duration(
-      [&]() {shad_find_if_algorithm(shad::distributed_sequential_tag{},in);});
-    std::cout << "shad::find_if with sequential policy takes " 
-              << execute_time.count() << " seconds \n"; 
-  }
-
-  // using distributed_parallel_tag
-  {
-    auto execute_time = shad::measure<std::chrono::seconds>::duration(
-      [&]() {shad_find_if_algorithm(shad::distributed_parallel_tag{}, in);});
-    std::cout << "shad::find_if with parallel policy takes " 
-              << execute_time.count() << " seconds \n"; 
+              << (execute_time.count()/repetitions) << " seconds \n"; 
   }
 
   // shad for_each algorithm 
   // using distributed_sequential_tag
   {
+    SetUp(in);
     auto execute_time = shad::measure<std::chrono::seconds>::duration(
       [&]() {shad_for_each_algorithm(shad::distributed_sequential_tag{},in);});
     std::cout << "shad::for_each with sequential policy takes " 
-              << execute_time.count() << " seconds \n"; 
+              << (execute_time.count()/repetitions) << " seconds \n"; 
   }
 
   // using distributed_parallel_tag
   {
+    SetUp(in);
     auto execute_time = shad::measure<std::chrono::seconds>::duration(
       [&]() {shad_for_each_algorithm(shad::distributed_parallel_tag{}, in);});
     std::cout << "shad::for_each with parallel policy takes " 
-              << execute_time.count() << " seconds \n"; 
+              << (execute_time.count()/repetitions) << " seconds \n"; 
   }
 
   // shad transform algorithm 
   // using distributed_sequential_tag
   {
+    SetUp(in);
     auto execute_time = shad::measure<std::chrono::seconds>::duration(
       [&]() {shad_transform_algorithm(shad::distributed_sequential_tag{},in);});
     std::cout << "shad::transform with sequential policy takes " 
-              << execute_time.count() << " seconds \n"; 
+              << (execute_time.count()/repetitions) << " seconds \n"; 
   }
 
   // using distributed_parallel_tag
   {
+    SetUp(in);
     auto execute_time = shad::measure<std::chrono::seconds>::duration(
       [&]() {shad_transform_algorithm(shad::distributed_parallel_tag{}, in);});
     std::cout << "shad::transform with parallel policy takes " 
-              << execute_time.count() << " seconds \n"; 
+              << (execute_time.count()/repetitions) << " seconds \n"; 
   }
 
 
