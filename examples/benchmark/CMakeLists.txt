@@ -1,5 +1,5 @@
 set(program
-array_shad_fill
+array
 )
 
 
