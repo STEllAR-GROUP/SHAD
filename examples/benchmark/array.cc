@@ -31,7 +31,7 @@
 #include "shad/util/measure.h"
 
 constexpr int RUN_TIMES = 2;
-constexpr static size_t kArraySize = 2;
+constexpr static size_t kArraySize = 1000000;
 using array_t = shad::impl::array<int, kArraySize>;
 using iterator = array_t::iterator;
 
@@ -114,7 +114,8 @@ int main(int argc, char *argv[]) {
  // array
   shad::array<int, kArraySize> in;
 
-  std::cout << "shad::array, using " << shad::rt::numLocalities() 
+  std::cout << "shad::array, size of " << kArraySize 
+            << ", using " << shad::rt::numLocalities() 
             << " localities, running each shad STL algorithm for " 
             << RUN_TIMES << " times: \n";
 
