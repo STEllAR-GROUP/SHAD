@@ -200,7 +200,7 @@ int main(int argc, char *argv[]) {
     SetUp(in);
     auto execute_time = shad::measure<std::chrono::seconds>::duration(
       [&]() {shad_minmax_algorithm(shad::distributed_sequential_tag{}, in);});
-    std::cout << "shad::transform with sequential policy takes " 
+    std::cout << "shad::minmax with sequential policy takes " 
               << (execute_time.count()/repetitions) << " seconds \n"; 
   }
 
@@ -209,7 +209,7 @@ int main(int argc, char *argv[]) {
     SetUp(in);
     auto execute_time = shad::measure<std::chrono::seconds>::duration(
       [&]() {shad_minmax_algorithm(shad::distributed_parallel_tag{}, in);});
-    std::cout << "shad::transform with parallel policy takes " 
+    std::cout << "shad::minmax with parallel policy takes " 
               << (execute_time.count()/repetitions) << " seconds \n"; 
   }
 

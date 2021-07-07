@@ -29,7 +29,7 @@
 #include "shad/util/measure.h"
 
 constexpr int repetitions = 2;
-constexpr static size_t kSize = 1000000;
+constexpr static size_t kSize = 100000;
 using set_t = shad::Set<int>;
 using iterator = set_t::iterator;
 using value_type = set_t::value_type;
@@ -169,7 +169,7 @@ int main(int argc, char *argv[]) {
       [&]() {shad_transform_algorithm<shad::distributed_sequential_tag, 
              shad_inserter_t>(
                 shad::distributed_sequential_tag{}, set_);});
-    std::cout << "shad::transform using insert iterator with sequential policy"
+    std::cout << "shad::transform using insert iterator with sequential policy "
               << "takes " <<(execute_time.count()/repetitions) << " seconds \n"; 
   }
 
@@ -180,7 +180,7 @@ int main(int argc, char *argv[]) {
       [&]() {shad_transform_algorithm<shad::distributed_parallel_tag, 
              shad_inserter_t>(
                 shad::distributed_parallel_tag{}, set_);});
-    std::cout << "shad::transform using insert iterator with parallel policy"
+    std::cout << "shad::transform using insert iterator with parallel policy "
               << "takes " <<(execute_time.count()/repetitions) << " seconds \n"; 
   }
 
