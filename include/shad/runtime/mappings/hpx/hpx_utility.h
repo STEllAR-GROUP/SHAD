@@ -65,11 +65,9 @@ namespace detail {
     template <typename T>
     struct invoke_executeAt<void (*)(T)>
     {
-        static void call(std::size_t f,
-            hpx::serialization::serialize_buffer<std::uint8_t> args)
+        static void call(std::size_t f, T args)
         {
-            return reinterpret_cast<void (*)(T)>(f)(
-                std::move(*reinterpret_cast<std::decay_t<T>*>(args.data())));
+            return reinterpret_cast<void (*)(T)>(f)(std::move(args));
         }
     };
 
@@ -476,8 +474,7 @@ struct invoke_executeAt_action;
 template <typename T>
 struct invoke_executeAt_action<void (*)(T)>
   : ::hpx::actions::action<
-        void (*)(std::size_t,
-            hpx::serialization::serialize_buffer<std::uint8_t>),
+        void (*)(std::size_t, T),
         &detail::invoke_executeAt<void (*)(T)>::call,
         invoke_executeAt_action<void (*)(T)>>
 {

@@ -51,17 +51,14 @@ struct SynchronousInterface<hpx_tag> {
 
     checkLocality(loc);
     FunctionTy fn = std::forward<decltype(function)>(function);
-    //fn(args);  // local case
-
+    fn(args);  // local case
+/***
     using action_type = invoke_executeAt_action<decltype(fn)>;
-    using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
     std::uint32_t loc_id = getLocalityId(loc);
     hpx::naming::id_type id = hpx::naming::get_id_from_locality_id(loc_id);
-    hpx::sync<action_type>(id,
-        reinterpret_cast<std::size_t>(fn),
-        buffer_type(reinterpret_cast<const std::uint8_t*>(&args), sizeof(args),
-                    buffer_type::reference));
+    hpx::sync<action_type>(id, reinterpret_cast<std::size_t>(fn), args);
+***/
   }
 
   template <typename FunT>
@@ -73,17 +70,17 @@ struct SynchronousInterface<hpx_tag> {
     FunctionTy fn = std::forward<decltype(function)>(function);
     checkLocality(loc);
 
-    //fn(argsBuffer.get(), bufferSize);  // local case
-
+    fn(argsBuffer.get(), bufferSize);  // local case
+/***
     using action_type = invoke_executeAt_buffer_action;
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
     std::uint32_t loc_id = getLocalityId(loc);
     hpx::naming::id_type id = hpx::naming::get_id_from_locality_id(loc_id);
 
-    hpx::sync<action_type>(id,
-        reinterpret_cast<std::size_t>(fn),
-        buffer_type(argsBuffer.get(), bufferSize, buffer_type::reference));
+    hpx::sync<action_type>(id, reinterpret_cast<std::size_t>(fn), 
+                           argsBuffer.get(), bufferSize);
+***/
   }
 
   template <typename FunT, typename InArgsT>
@@ -95,23 +92,21 @@ struct SynchronousInterface<hpx_tag> {
     FunctionTy fn = std::forward<decltype(function)>(function);
     checkLocality(loc);
 
-    //fn(args, resultBuffer, resultSize); // local case
-
+    fn(args, resultBuffer, resultSize); // local case
+/***
     using action_type = invoke_executeAtWithRetBuff_action<decltype(fn)>;
-    using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
     std::uint32_t loc_id = getLocalityId(loc);
     hpx::naming::id_type id = hpx::naming::get_id_from_locality_id(loc_id);
 
-    buffer_type result = hpx::sync<action_type>(id,
-       reinterpret_cast<std::size_t>(fn),
-       buffer_type(reinterpret_cast<std::uint8_t const*>(&args), sizeof(args),
-                   buffer_type::reference),
-      *resultSize);
+    buffer_type result = hpx::sync<action_type>(id, cmake -DCMAKE_INSTALL_PREFIX=/home/nanmiao/Documents/shad_project/install/shad_hpx_Debug -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_STANDARD=17 -DSHAD_RUNTIME_SYSTEM=HPX  -DHPX_DIR=/home/nanmiao/Documents/shad_project/install/hpx_Debug/lib/cmake/HPX  -DGTEST_ROOT=/usr/local/include/gtest -DGPERFTOOLS_ROOT=/home/nanmiao/Documents/shad_project/install/gperftools ..
+
+        reinterpret_cast<std::size_t>(fn), args, *resultSize);
     
     *resultSize = result.size();
 
     std::memcpy(resultBuffer, result.data(), result.size());
+***/    
   }
 
   template <typename FunT>
@@ -126,8 +121,8 @@ struct SynchronousInterface<hpx_tag> {
     FunctionTy fn = std::forward<decltype(function)>(function);
     checkLocality(loc);
 
-    //fn(argsBuffer.get(), bufferSize, resultBuffer, resultSize); // local case
-
+    fn(argsBuffer.get(), bufferSize, resultBuffer, resultSize); // local case
+/***
     using action_type = invoke_executeAtWithRetBuff_buff_action;
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
@@ -141,6 +136,7 @@ struct SynchronousInterface<hpx_tag> {
 
     *resultSize = result.size();
     std::memcpy(resultBuffer, result.data(), result.size());
+***/
   }
 
   template <typename FunT, typename InArgsT, typename ResT>
@@ -150,8 +146,8 @@ struct SynchronousInterface<hpx_tag> {
 
     FunctionTy fn = std::forward<decltype(function)>(function);
     checkLocality(loc);
-    //fn(args, result); // local case
-
+    fn(args, result); // local case
+/***
     using action_type = invoke_executeAtWithRet_action<decltype(fn)>;
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
@@ -160,13 +156,13 @@ struct SynchronousInterface<hpx_tag> {
 
     buffer_type res = hpx::sync<action_type>(id,
         reinterpret_cast<std::size_t>(fn),
-        buffer_type(reinterpret_cast<const std::uint8_t*>(&args), sizeof(args),
-                    buffer_type::reference),
         buffer_type(reinterpret_cast<std::uint8_t*>(result), 
-                    sizeof(ResT), buffer_type::reference));
+            sizeof(ResT), buffer_type::reference),
+        buffer_type(reinterpret_cast<const std::uint8_t*>(&args), sizeof(args),
+                    buffer_type::reference));
 
     std::memcpy(reinterpret_cast<uint8_t *>(result), res.data(), res.size());
-
+***/
   }
 
   template <typename FunT, typename ResT>
@@ -177,8 +173,8 @@ struct SynchronousInterface<hpx_tag> {
 
     FunctionTy fn = std::forward<decltype(function)>(function);
     checkLocality(loc);
-    //fn(argsBuffer.get(), bufferSize, result); //local case
-
+    fn(argsBuffer.get(), bufferSize, result); //local case
+/***
     using action_type = invoke_executeAtWithRet_buff_action<decltype(fn)>;
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
@@ -187,11 +183,12 @@ struct SynchronousInterface<hpx_tag> {
 
     buffer_type res = hpx::sync<action_type>(id,
         reinterpret_cast<std::size_t>(fn),
-        buffer_type(argsBuffer.get(), bufferSize, buffer_type::reference),
         buffer_type(reinterpret_cast<std::uint8_t*>(result), 
-                    sizeof(ResT), buffer_type::reference));
+            sizeof(ResT), buffer_type::reference),
+        buffer_type(argsBuffer.get(), bufferSize, buffer_type::reference));
 
     std::memcpy(reinterpret_cast<uint8_t *>(result), res.data(), res.size());
+  ***/
   }
 
   template <typename FunT, typename InArgsT>
@@ -199,8 +196,8 @@ struct SynchronousInterface<hpx_tag> {
     using FunctionTy = void (*)(const InArgsT &);
 
     FunctionTy fn = std::forward<decltype(function)>(function);
-    //fn(args); // local
-
+    fn(args); // local
+/***
     using action_type = invoke_executeAt_action<decltype(fn)>;
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
@@ -214,6 +211,7 @@ struct SynchronousInterface<hpx_tag> {
                             sizeof(args), buffer_type::reference)));
     }
     hpx::wait_all(futures);
+ ***/   
   }
 
   template <typename FunT>
@@ -223,8 +221,8 @@ struct SynchronousInterface<hpx_tag> {
     using FunctionTy = void (*)(const uint8_t *, const uint32_t);
 
     FunctionTy fn = std::forward<decltype(function)>(function);
-    //fn(argsBuffer.get(), bufferSize); // local case
-
+    fn(argsBuffer.get(), bufferSize); // local case
+/***
     using action_type = invoke_executeAt_buffer_action;
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
@@ -238,6 +236,7 @@ struct SynchronousInterface<hpx_tag> {
                             buffer_type::reference)));
     }
     hpx::wait_all(futures);
+ ***/   
   }
 
   template <typename FunT, typename InArgsT>
@@ -252,15 +251,16 @@ struct SynchronousInterface<hpx_tag> {
     using action_type = invoke_forEachAt_action<decltype(fn)>;
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
-    //hpx::for_loop(hpx::execution::par, 0, numIters,
-    //              [&](std::size_t i) {fn(args, i);}); // local case
-
+    hpx::for_loop(hpx::execution::par, 0, numIters,
+                  [&](std::size_t i) {fn(args, i);}); // local case
+/***
     std::uint32_t loc_id = getLocalityId(loc);
     hpx::naming::id_type id = hpx::naming::get_id_from_locality_id(loc_id);
 
     hpx::sync<action_type>(id, reinterpret_cast<std::size_t>(fn),
         buffer_type(reinterpret_cast<const std::uint8_t*>(&args), sizeof(args),
             buffer_type::reference), numIters);
+***/            
   }
 
   template <typename FunT>
@@ -274,9 +274,9 @@ struct SynchronousInterface<hpx_tag> {
     checkLocality(loc);
 
     // local case
-    //hpx::for_loop(hpx::execution::par, 0, numIters,
-    //              [&](std::size_t i) {fn(argsBuffer.get(), bufferSize, i);});
-
+    hpx::for_loop(hpx::execution::par, 0, numIters,
+                  [&](std::size_t i) {fn(argsBuffer.get(), bufferSize, i);});
+/***
     using action_type = invoke_forEachAt_buffer_action;
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
@@ -286,7 +286,7 @@ struct SynchronousInterface<hpx_tag> {
     hpx::sync<action_type>(id, reinterpret_cast<std::size_t>(fn),
         buffer_type(argsBuffer.get(), bufferSize, buffer_type::reference),
         numIters);
-
+***/
   }
 
   template <typename FunT, typename InArgsT>
@@ -296,9 +296,9 @@ struct SynchronousInterface<hpx_tag> {
 
     FunctionTy fn = std::forward<decltype(function)>(function);
 
-    //hpx::for_loop(hpx::execution::par, 0, numIters,
-    //              [&](std::size_t i) {fn(args, i);}); // local case
-    
+    hpx::for_loop(hpx::execution::par, 0, numIters,
+                  [&](std::size_t i) {fn(args, i);}); // local case
+/***    
     using action_type = invoke_forEachOnAll_action<decltype(fn)>;
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
@@ -326,6 +326,7 @@ struct SynchronousInterface<hpx_tag> {
             iters * last_loc_idx,  numIters));
 
     hpx::wait_all(futures);
+***/
   }
 
   template <typename FunT>
@@ -337,9 +338,9 @@ struct SynchronousInterface<hpx_tag> {
     FunctionTy fn = std::forward<decltype(function)>(function);
 
     // local case
-    //hpx::for_loop(hpx::execution::par, 0, numIters,
-    //              [&](std::size_t i) {fn(argsBuffer.get(), bufferSize, i);});
-
+    hpx::for_loop(hpx::execution::par, 0, numIters,
+                  [&](std::size_t i) {fn(argsBuffer.get(), bufferSize, i);});
+/***
     using action_type = invoke_forEachOnAll_buffer_action;
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
@@ -366,14 +367,15 @@ struct SynchronousInterface<hpx_tag> {
             iters * last_loc_idx, numIters));
 
     hpx::wait_all(futures);
+***/
   }
 
   template <typename T>
   static void dma(const Locality & destLoc, const T* remoteAddress,
                   const T* localData, const size_t numElements) {
-    //memcpy((std::uint8_t*)remoteAddress,
-    //       (std::uint8_t*)(localData), numElements*sizeof(T)); // local case
-
+    memcpy((std::uint8_t*)remoteAddress,
+           (std::uint8_t*)(localData), numElements*sizeof(T)); // local case
+/***
     using action_type = invoke_dma_put_action<T>;
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
@@ -384,15 +386,15 @@ struct SynchronousInterface<hpx_tag> {
         buffer_type(reinterpret_cast<const uint8_t *>(localData),
             numElements*sizeof(T), buffer_type::reference),
             reinterpret_cast<std::size_t>(remoteAddress));
-
+***/
   }
 
   template <typename T>
   static void dma(const T* localAddress, const Locality & srcLoc,
                   const T* remoteData, const size_t numElements) {
-    //memcpy((std::uint8_t*)localAddress, (std::uint8_t*)(remoteData),
-    //       numElements*sizeof(T)); // local case
-
+    memcpy((std::uint8_t*)localAddress, (std::uint8_t*)(remoteData),
+           numElements*sizeof(T)); // local case
+/***
     using action_type = invoke_dma_get_action;
     using buffer_type = hpx::serialization::serialize_buffer<std::uint8_t>;
 
@@ -404,7 +406,7 @@ struct SynchronousInterface<hpx_tag> {
 
     std::memcpy(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(
         localAddress)), res.data(), res.size());
-
+***/
   }
 };
 
