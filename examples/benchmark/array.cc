@@ -39,77 +39,15 @@ namespace shad {
 
 int main(int argc, char *argv[]) {
 
-  shad::array<int, kArraySize> in;
-
   std::cout << "shad::array, size of " << kArraySize 
             << ", using " << shad::rt::numLocalities() 
             << " localities, running each shad STL algorithm for " 
             << repetitions << " times, and take average: \n";
 
-  //////////////////////////////////////////////////////////////////////
-  // shad generate algorithm 
-  // using distributed_sequential_tag
-  {
-    // warm up loop
-    for (int i = 0; i < 10; i ++){
-      shad::generate(distributed_sequential_tag{}, in.begin(), in.end(), 
-                   [=]() {
-                     std::random_device rd;
-                     std::default_random_engine G(rd());
-                     std::uniform_int_distribution<int> dist(1, 10);
-                     return dist(G);
-                   });
-    }
-
-    // timing loop
-    auto start = std::chrono::steady_clock::now();
-    for(int i = 0; i < repetitions; ++i)
-    {
-      shad::generate(distributed_sequential_tag{}, in.begin(), in.end(), 
-                   [=]() {
-                     std::random_device rd;
-                     std::default_random_engine G(rd());
-                     std::uniform_int_distribution<int> dist(1, 10);
-                     return dist(G);
-                   });
-    }
-    std::chrono::duration<double, std::chrono::seconds::period> duration = 
-      std::chrono::steady_clock::now() - start;
-
-    std::cout << "shad::generate with sequential policy takes " 
-              << (duration.count()/repetitions) << " seconds \n"; 
-  }
-
-  // using distributed_parallel_tag
-  {
-    // warm up loop
-    for (int i = 0; i < 10; i ++){
-      shad::generate(distributed_parallel_tag{}, in.begin(), in.end(), 
-                   [=]() {
-                     std::random_device rd;
-                     std::default_random_engine G(rd());
-                     std::uniform_int_distribution<int> dist(1, 10);
-                     return dist(G);
-                   });
-    }
-
-    // timing loop
-    auto start = std::chrono::steady_clock::now();
-    for(int i = 0; i < repetitions; ++i)
-    {
-      shad::generate(distributed_parallel_tag{}, in.begin(), in.end(), 
-                   [=]() {
-                     std::random_device rd;
-                     std::default_random_engine G(rd());
-                     std::uniform_int_distribution<int> dist(1, 10);
-                     return dist(G);
-                   });
-    }
-    std::chrono::duration<double, std::chrono::seconds::period> duration = 
-      std::chrono::steady_clock::now() - start;
-
-    std::cout << "shad::generate with parallel policy takes " 
-              << (duration.count()/repetitions) << " seconds \n"; 
+  // set up
+  shad::array<int, kArraySize> in;
+  for (size_t i = 0; i < kArraySize; i++) {
+      in[i] = i + 1;
   }
 
   //////////////////////////////////////////////////////////////////////
