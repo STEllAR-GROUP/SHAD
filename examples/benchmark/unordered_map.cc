@@ -28,7 +28,7 @@
 #include "shad/core/unordered_map.h"
 #include "shad/util/measure.h"
 
-constexpr int repetitions = 2;
+constexpr int repetitions = 10;
 constexpr static size_t kSize = 1000000;
 
 using hashmap_t =
@@ -39,152 +39,118 @@ using shad_inserter_t = shad::insert_iterator<shad::unordered_map<int, int>>;
 using shad_buffered_inserter_t =
     shad::buffered_insert_iterator<shad::unordered_map<int, int>>;
 
-void SetUp(shad::unordered_map<int, int> &in) {
-    shad_buffered_inserter_t ins(in, in.begin());
-
-    for (size_t i = 0; i < kSize; ++i) {
-      ins = std::make_pair(i, 3 * (i + 1));
-    }
-    ins.wait();
-    ins.flush();
-}
-
-
-template <typename ExecutionPolicy>
-void shad_count_algorithm(ExecutionPolicy &&policy,
-                          shad::unordered_map<int, int> &in) {
-  for(int i = 0; i < repetitions; ++i)
-  {
-    shad::count(std::forward<ExecutionPolicy>(policy), in.begin(), in.end(),
-                std::make_pair(0, 1));
-  }
-}
-
-template <typename ExecutionPolicy>
-void shad_count_if_algorithm(ExecutionPolicy &&policy,
-                             shad::unordered_map<int, int> &in) {
-  for(int i = 0; i < repetitions; ++i)
-  {
-    shad::count_if(std::forward<ExecutionPolicy>(policy), in.begin(), in.end(),
-                   [](const value_type &i) { return i.second % 4 == 0; });
-  }
-}
-
-
-template <typename ExecutionPolicy>
-void shad_minmax_algorithm(ExecutionPolicy &&policy,
-                           shad::unordered_map<int, int> &in) {
-  for(int i = 0; i < repetitions; ++i)
-  {
-    shad::minmax_element(std::forward<ExecutionPolicy>(policy), in.begin(),
-                         in.end());
-  }
-}
-
-template <typename ExecutionPolicy, typename shad_inserter>
-void shad_transform_algorithm(ExecutionPolicy &&policy,
-                              shad::unordered_map<int, int> &in) {
-  for(int i = 0; i < repetitions; ++i)
-  {
-    shad::transform(std::forward<ExecutionPolicy>(policy), in.begin(), in.end(),
-                    shad_inserter(in, in.begin()),
-                    [](const value_type &i) { return i; });
-  }
-}
 
 namespace shad {
 
 int main(int argc, char *argv[]) {
-
-  shad::unordered_map<int, int> map_;
-
+  
   std::cout << "shad::unordered_map, size of " << kSize 
             << ", using " << shad::rt::numLocalities() 
             << " localities, running each shad STL algorithm for " 
-            << repetitions << " times: \n";
+            << repetitions << " times, and take average: \n";
 
+  //////////////////////////////////////////////////////////////////////
+  // set up
+  shad::unordered_map<int, int> in;
+  shad_buffered_inserter_t ins(in, in.begin());
 
-  // shad count algorithm 
+  for (size_t i = 0; i < kSize; ++i) {
+    ins = std::make_pair(i, 3 * (i + 1));
+  }
+  ins.wait();
+  ins.flush();
+  
+  //////////////////////////////////////////////////////////////////////
+  // shad count_if algorithm 
   // using distributed_sequential_tag
   {
-    SetUp(map_);
-    auto execute_time = shad::measure<std::chrono::seconds>::duration(
-      [&]() {shad_count_algorithm(shad::distributed_sequential_tag{}, map_);});
-    std::cout << "shad::count with sequential policy takes " 
-              << (execute_time.count()/repetitions) << " seconds \n"; 
-  }
+    // warm up loop
+    for (int i = 0; i < 10; i ++){
+      shad::count_if(shad::distributed_sequential_tag{}, in.begin(), in.end(),
+                     [](const value_type &i) { return i.second % 4 == 0; });
+    }
 
-  // using distributed_parallel_tag
-  {
-    SetUp(map_);
-    auto execute_time = shad::measure<std::chrono::seconds>::duration(
-      [&]() {shad_count_algorithm(shad::distributed_parallel_tag{}, map_);});
-    std::cout << "shad::count with parallel policy takes " 
-              << (execute_time.count()/repetitions) << " seconds \n"; 
-  }
+    // timing loop
+    auto start = std::chrono::steady_clock::now();
+    for(int i = 0; i < repetitions; ++i)
+    {
+      shad::count_if(shad::distributed_sequential_tag{}, in.begin(), in.end(),
+                     [](const value_type &i) { return i.second % 4 == 0; });
+    }
+    std::chrono::duration<double, std::chrono::seconds::period> duration = 
+      std::chrono::steady_clock::now() - start;
 
-
-    // shad count_if algorithm 
-  // using distributed_sequential_tag
-  {
-    SetUp(map_);
-    auto execute_time = shad::measure<std::chrono::seconds>::duration(
-      [&]() {shad_count_if_algorithm(shad::distributed_sequential_tag{}, map_);});
     std::cout << "shad::count_if with sequential policy takes " 
-              << (execute_time.count()/repetitions) << " seconds \n"; 
+              << (duration.count()/repetitions) << " seconds \n"; 
   }
 
   // using distributed_parallel_tag
   {
-    SetUp(map_);
-    auto execute_time = shad::measure<std::chrono::seconds>::duration(
-      [&]() {shad_count_if_algorithm(shad::distributed_parallel_tag{}, map_);});
-    std::cout << "shad::count_if with parallel policy takes " 
-              << (execute_time.count()/repetitions) << " seconds \n"; 
-  }
+    // warm up loop
+    for (int i = 0; i < 10; i ++){
+      shad::count_if(shad::distributed_parallel_tag{}, in.begin(), in.end(),
+                     [](const value_type &i) { return i.second % 4 == 0; });
+    }
 
-    // shad minmax algorithm 
+    // timing loop
+    auto start = std::chrono::steady_clock::now();
+    for(int i = 0; i < repetitions; ++i)
+    {
+      shad::count_if(shad::distributed_parallel_tag{}, in.begin(), in.end(),
+                     [](const value_type &i) { return i.second % 4 == 0; });
+    }
+    std::chrono::duration<double, std::chrono::seconds::period> duration = 
+      std::chrono::steady_clock::now() - start;
+
+    std::cout << "shad::count_if with parallel policy takes " 
+              << (duration.count()/repetitions) << " seconds \n"; 
+  }
+ 
+  //////////////////////////////////////////////////////////////////////
+  // shad minmax algorithm 
   // using distributed_sequential_tag
   {
-    SetUp(map_);
-    auto execute_time = shad::measure<std::chrono::seconds>::duration(
-      [&]() {shad_minmax_algorithm(shad::distributed_sequential_tag{}, map_);});
+    // warm up loop
+    for (int i = 0; i < 10; i ++){
+      shad::minmax_element(shad::distributed_sequential_tag{}, in.begin(),
+                           in.end());
+    }
+
+    // timing loop
+    auto start = std::chrono::steady_clock::now();
+    for(int i = 0; i < repetitions; ++i)
+    {
+      shad::minmax_element(shad::distributed_sequential_tag{}, in.begin(), 
+                           in.end());
+    }
+    std::chrono::duration<double, std::chrono::seconds::period> duration = 
+      std::chrono::steady_clock::now() - start;
+
     std::cout << "shad::minmax_element with sequential policy takes " 
-              << (execute_time.count()/repetitions) << " seconds \n"; 
+              << (duration.count()/repetitions) << " seconds \n"; 
   }
 
   // using distributed_parallel_tag
   {
-    SetUp(map_);
-    auto execute_time = shad::measure<std::chrono::seconds>::duration(
-      [&]() {shad_minmax_algorithm(shad::distributed_parallel_tag{}, map_);});
+    // warm up loop
+    for (int i = 0; i < 10; i ++){
+      shad::minmax_element(shad::distributed_parallel_tag{}, in.begin(),
+                           in.end());
+    }
+
+    // timing loop
+    auto start = std::chrono::steady_clock::now();
+    for(int i = 0; i < repetitions; ++i)
+    {
+      shad::minmax_element(shad::distributed_parallel_tag{}, in.begin(), 
+                           in.end());
+    }
+    std::chrono::duration<double, std::chrono::seconds::period> duration = 
+      std::chrono::steady_clock::now() - start;
+
     std::cout << "shad::minmax_element with parallel policy takes " 
-              << (execute_time.count()/repetitions) << " seconds \n"; 
+              << (duration.count()/repetitions) << " seconds \n"; 
   }
-
-
-  // shad transform algorithm 
-  // using insert iterator with distributed_sequetest_with_policy
-  {
-    SetUp(map_);
-    auto execute_time = shad::measure<std::chrono::seconds>::duration(
-      [&]() {shad_transform_algorithm<shad::distributed_sequential_tag, 
-             shad_inserter_t>(
-                shad::distributed_sequential_tag{}, map_);});
-    std::cout << "shad::transform using insert iterator with sequential policy "
-              << "takes " <<(execute_time.count()/repetitions) << " seconds \n"; 
-  }
-
-  // using insert iterator with distributed_parallel_tag
-  {
-    SetUp(map_);
-    auto execute_time = shad::measure<std::chrono::seconds>::duration(
-      [&]() {shad_transform_algorithm<shad::distributed_parallel_tag, 
-             shad_inserter_t>( shad::distributed_parallel_tag{}, map_);});
-    std::cout << "shad::transform using insert iterator with parallel policy "
-              << "takes " <<(execute_time.count()/repetitions) << " seconds \n"; 
-  }
-
 
   return 0;
 }
