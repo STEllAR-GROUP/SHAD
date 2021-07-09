@@ -22,11 +22,12 @@
 //
 //===----------------------------------------------------------------------===/
 
+#include <chrono>
 #include <iostream>
 
 #include "shad/core/algorithm.h"
 #include "shad/core/unordered_set.h"
-#include "shad/util/measure.h"
+
 
 constexpr int repetitions = 10;
 constexpr static size_t kSize = 1000000;

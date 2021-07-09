@@ -22,31 +22,30 @@
 //
 //===----------------------------------------------------------------------===/
 
-#include <stdlib.h>
+#include <chrono>
 #include <iostream>
-#include <random>
 
 #include "shad/core/algorithm.h"
 #include "shad/core/array.h"
-#include "shad/util/measure.h"
+
 
 constexpr int repetitions = 10;
-constexpr static size_t kArraySize = 1000000;
-using array_t = shad::impl::array<int, kArraySize>;
+constexpr static size_t kSize = 1000000;
+using array_t = shad::impl::array<int, kSize>;
 using iterator = array_t::iterator;
 
 namespace shad {
 
 int main(int argc, char *argv[]) {
 
-  std::cout << "shad::array, size of " << kArraySize 
+  std::cout << "shad::array, size of " << kSize 
             << ", using " << shad::rt::numLocalities() 
             << " localities, running each shad STL algorithm for " 
             << repetitions << " times, and take average: \n";
 
   // set up
-  shad::array<int, kArraySize> in;
-  for (size_t i = 0; i < kArraySize; i++) {
+  shad::array<int, kSize> in;
+  for (size_t i = 0; i < kSize; i++) {
       in[i] = i + 1;
   }
 
