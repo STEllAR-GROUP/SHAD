@@ -51,14 +51,14 @@ struct SynchronousInterface<hpx_tag> {
 
     checkLocality(loc);
     FunctionTy fn = std::forward<decltype(function)>(function);
-    fn(args);  // local case
-/***
+    //fn(args);  // local case
+
     using action_type = invoke_executeAt_action<decltype(fn)>;
 
     std::uint32_t loc_id = getLocalityId(loc);
     hpx::naming::id_type id = hpx::naming::get_id_from_locality_id(loc_id);
     hpx::sync<action_type>(id, reinterpret_cast<std::size_t>(fn), args);
-***/
+
   }
 
   template <typename FunT>

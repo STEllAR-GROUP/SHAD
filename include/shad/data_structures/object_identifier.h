@@ -56,7 +56,7 @@ class ObjectIdentifier {
   static constexpr uint8_t kIdentifierBitsize = 48u;
 
   /// @brief Constructor.
-  explicit constexpr ObjectIdentifier(uint64_t id) : id_(id) {}
+  explicit constexpr ObjectIdentifier(uint64_t id=0) : id_(id) {}
 
   /// @brief Constructor.
   /// @param[in] locality The locality identifier part.

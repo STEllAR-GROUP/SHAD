@@ -51,6 +51,7 @@ class DefaultEdgeIndexStorage {
  public:
   struct EmptyAttr {};
   using SrcAttributesT = EmptyAttr;
+  DefaultEdgeIndexStorage()=default;
   explicit DefaultEdgeIndexStorage(const size_t numVertices)
       : edgeList_(std::max(numVertices / constants::kDefaultNumEntriesPerBucket,
                            1lu)) {}
@@ -59,6 +60,7 @@ class DefaultEdgeIndexStorage {
                            1lu)) {}
   static constexpr size_t kEdgeListChunkSize_ = 3072 / sizeof(DestT);
   struct LocalEdgeListChunk {
+    LocalEdgeListChunk()=default;
     LocalEdgeListChunk(size_t _numDest, bool _ow, DestT* _dest)
         : numDest(_numDest), overwrite(_ow) {
       memcpy(destinations.data(), _dest,

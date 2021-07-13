@@ -380,6 +380,7 @@ class EdgeIndex
 
   using LocalEdgeListChunk = typename StorageT::LocalEdgeListChunk;
   struct EdgeListChunk {
+    EdgeListChunk()=default;
     EdgeListChunk(ObjectID &_oid, SrcT _src, LocalEdgeListChunk &_chunk)
         : oid(_oid), src(_src), chunk(_chunk) {}
     typename EdgeIndex<SrcT, DestT, StorageT>::ObjectID oid;
