@@ -24,13 +24,15 @@
 
 #include <chrono>
 #include <iostream>
+#include <random>
+#include <stdlib.h>
 
 #include "shad/core/algorithm.h"
 #include "shad/core/array.h"
 
 
 constexpr int repetitions = 10;
-constexpr static size_t kSize = 1000000;
+constexpr static size_t kSize = 2;
 using array_t = shad::impl::array<int, kSize>;
 using iterator = array_t::iterator;
 
@@ -45,9 +47,18 @@ int main(int argc, char *argv[]) {
 
   // set up
   shad::array<int, kSize> in;
-  for (size_t i = 0; i < kSize; i++) {
-      in[i] = i + 1;
-  }
+
+  // shad::fill(shad::distributed_parallel_tag{}, in.begin(), in.end(), 2);
+
+  // shad generate algorithm
+  shad::generate(shad::distributed_parallel_tag{}, in.begin(), in.end(), [=]() {
+    std::random_device rd;
+    std::default_random_engine G(rd());
+    std::uniform_int_distribution<int> dist(1, 10);
+    return dist(G);
+  });
+
+  std::cout << "Done set up \n";
 
   //////////////////////////////////////////////////////////////////////
   // shad count_if algorithm 

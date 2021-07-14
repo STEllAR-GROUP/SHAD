@@ -61,6 +61,8 @@ int main(int argc, char *argv[]) {
   ins.wait();
   ins.flush();
   
+  std::cout << "Done set up \n";
+  
   //////////////////////////////////////////////////////////////////////
   // shad count_if algorithm 
   // using distributed_sequential_tag
