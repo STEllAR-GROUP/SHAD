@@ -2,7 +2,10 @@ set(program
 array
 unordered_set
 unordered_map
-task
+execute_at_task
+execute_on_all_task
+rdma
+for_each
 )
 
 

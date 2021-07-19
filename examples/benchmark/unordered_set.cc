@@ -56,17 +56,18 @@ int main(int argc, char *argv[]) {
   ins.wait();
   ins.flush();
 
+    std::cout << "Done set up \n";
+
+  //////////////////////////////////////////////////////////////////////
+  // warm up loop
+  for (int i = 0; i < 10; i ++){
+    shad::count_if(shad::distributed_sequential_tag{}, in.begin(), in.end(),
+                   [](const value_type &i) { return i % 4 == 0; });
+  }
   //////////////////////////////////////////////////////////////////////
   // shad count_if algorithm 
   // using distributed_sequential_tag
   {
-    // warm up loop
-    for (int i = 0; i < 10; i ++){
-      shad::count_if(shad::distributed_sequential_tag{}, in.begin(), in.end(),
-                     [](const value_type &i) { return i % 4 == 0; });
-    }
-
-    // timing loop
     auto start = std::chrono::steady_clock::now();
     for(int i = 0; i < repetitions; ++i)
     {
@@ -82,13 +83,6 @@ int main(int argc, char *argv[]) {
 
   // using distributed_parallel_tag
   {
-    // warm up loop
-    for (int i = 0; i < 10; i ++){
-      shad::count_if(shad::distributed_parallel_tag{}, in.begin(), in.end(),
-                     [](const value_type &i) { return i % 4 == 0; });
-    }
-
-    // timing loop
     auto start = std::chrono::steady_clock::now();
     for(int i = 0; i < repetitions; ++i)
     {
@@ -106,13 +100,6 @@ int main(int argc, char *argv[]) {
   // shad minmax algorithm 
   // using distributed_sequential_tag
   {
-    // warm up loop
-    for (int i = 0; i < 10; i ++){
-      shad::minmax_element(shad::distributed_sequential_tag{}, in.begin(),
-                           in.end());
-    }
-
-    // timing loop
     auto start = std::chrono::steady_clock::now();
     for(int i = 0; i < repetitions; ++i)
     {
@@ -128,13 +115,6 @@ int main(int argc, char *argv[]) {
 
   // using distributed_parallel_tag
   {
-    // warm up loop
-    for (int i = 0; i < 10; i ++){
-      shad::minmax_element(shad::distributed_parallel_tag{}, in.begin(),
-                           in.end());
-    }
-
-    // timing loop
     auto start = std::chrono::steady_clock::now();
     for(int i = 0; i < repetitions; ++i)
     {

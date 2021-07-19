@@ -24,13 +24,15 @@
 
 #include <chrono>
 #include <iostream>
+#include <random>
+#include <stdlib.h>
 
 #include "shad/core/algorithm.h"
 #include "shad/core/array.h"
 
 
 constexpr int repetitions = 10;
-constexpr static size_t kSize = 1000000;
+constexpr static size_t kSize = 2;
 using array_t = shad::impl::array<int, kSize>;
 using iterator = array_t::iterator;
 
@@ -45,21 +47,30 @@ int main(int argc, char *argv[]) {
 
   // set up
   shad::array<int, kSize> in;
-  for (size_t i = 0; i < kSize; i++) {
-      in[i] = i + 1;
-  }
+
+  // shad::fill(shad::distributed_parallel_tag{}, in.begin(), in.end(), 2);
+
+  // shad generate algorithm
+  shad::generate(shad::distributed_parallel_tag{}, in.begin(), in.end(), [=]() {
+    std::random_device rd;
+    std::default_random_engine G(rd());
+    std::uniform_int_distribution<int> dist(1, 10);
+    return dist(G);
+  });
+
+  std::cout << "Done set up \n";
 
   //////////////////////////////////////////////////////////////////////
+  // warm up loop
+  for (int i = 0; i < 10; i ++){
+    shad::count_if(shad::distributed_sequential_tag{}, in.begin(), in.end(),
+                [](int &i) { return i % 4 == 0; });
+  }
+
+  ////////////////////////////////////////////////////////////////////////
   // shad count_if algorithm 
   // using distributed_sequential_tag
   {
-    // warm up loop
-    for (int i = 0; i < 10; i ++){
-      shad::count_if(shad::distributed_sequential_tag{}, in.begin(), in.end(),
-                  [](int &i) { return i % 4 == 0; });
-    }
-
-    // timing loop
     auto start = std::chrono::steady_clock::now();
     for(int i = 0; i < repetitions; ++i)
     {
@@ -75,13 +86,6 @@ int main(int argc, char *argv[]) {
 
   // using distributed_parallel_tag
   {
-    // warm up loop
-    for (int i = 0; i < 10; i ++){
-      shad::count_if(shad::distributed_parallel_tag{}, in.begin(), in.end(),
-                  [](int &i) { return i % 4 == 0; });
-    }
-
-    // timing loop
     auto start = std::chrono::steady_clock::now();
     for(int i = 0; i < repetitions; ++i)
     {
@@ -100,13 +104,6 @@ int main(int argc, char *argv[]) {
   // shad minmax algorithm 
   // using distributed_sequential_tag
   {
-    // warm up loop
-    for (int i = 0; i < 10; i ++){
-      shad::minmax_element(shad::distributed_sequential_tag{}, in.begin(),
-                           in.end());
-    }
-
-    // timing loop
     auto start = std::chrono::steady_clock::now();
     for(int i = 0; i < repetitions; ++i)
     {
@@ -122,13 +119,6 @@ int main(int argc, char *argv[]) {
 
   // using distributed_parallel_tag
   {
-    // warm up loop
-    for (int i = 0; i < 10; i ++){
-      shad::minmax_element(shad::distributed_parallel_tag{}, in.begin(),
-                           in.end());
-    }
-
-    // timing loop
     auto start = std::chrono::steady_clock::now();
     for(int i = 0; i < repetitions; ++i)
     {
